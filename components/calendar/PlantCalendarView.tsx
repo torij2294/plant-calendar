@@ -5,6 +5,7 @@ import { PlantAgendaList } from './PlantAgendaList';
 
 export default function PlantCalendarView() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [monthRows, setMonthRows] = useState(6);
 
   return (
     <View style={styles.container}>
@@ -12,12 +13,17 @@ export default function PlantCalendarView() {
         current={selectedDate}
         onDayPress={(day) => setSelectedDate(day.dateString)}
         markedDates={{
-          [selectedDate]: { selected: true, selectedColor: '#2f95dc' }
+          [selectedDate]: { selected: true, selectedColor: '#d6844b' }
         }}
-        theme={{
-          todayTextColor: '#2f95dc',
-          selectedDayBackgroundColor: '#2f95dc',
-          calendarBackground: '#ffffff',
+        onMonthChange={(month) => {
+          // Calculate number of rows needed for this month
+          const firstDay = new Date(month.year, month.month - 1, 1).getDay();
+          const daysInMonth = new Date(month.year, month.month, 0).getDate();
+          const rows = Math.ceil((firstDay + daysInMonth) / 7);
+          setMonthRows(rows);
+        }}
+        style={{
+          height: monthRows === 5 ? 300 : 340  // Adjust these values as needed
         }}
         // Horizontal scrolling properties
         horizontal={true}
@@ -36,7 +42,12 @@ export default function PlantCalendarView() {
         hideExtraDays={false}
         firstDay={1}
       />
-      <PlantAgendaList selectedDate={selectedDate} />
+      <View style={[
+        styles.agendaContainer,
+        { marginTop: monthRows === 5 ? -40 : 0 }  // Adjust this value as needed
+      ]}>
+        <PlantAgendaList selectedDate={selectedDate} />
+      </View>
     </View>
   );
 }
@@ -45,5 +56,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  agendaContainer: {
+    flex: 1,
   }
 }); 
