@@ -19,6 +19,11 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#c4cb89',
         headerShown: useClientOnlyValue(false, true),
         tabBarLabelStyle: typography.tabBar,
+        headerTitleStyle: {
+          fontFamily: 'PoppinsSemiBold',
+          fontSize: 20,
+          color: '#5a6736',
+        },
         tabBarStyle: {
           display: 'flex',
           height: 85,

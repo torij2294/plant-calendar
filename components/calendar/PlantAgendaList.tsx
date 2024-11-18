@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Text, FlatList } from 'react-native';
+import { typography } from '@/app/theme/typography';
 
 type PlantEvent = {
   id: string;
@@ -35,7 +36,7 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'PoppinsSemiBold',
     marginVertical: 16,
   },
   list: {
@@ -48,10 +49,11 @@ const styles = StyleSheet.create({
   },
   plantName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'PoppinsMedium',
   },
   action: {
     fontSize: 14,
+    fontFamily: 'Poppins',
     color: '#666',
     marginTop: 4,
   },

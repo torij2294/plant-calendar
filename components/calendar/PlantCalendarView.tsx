@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { CalendarList } from 'react-native-calendars';
 import { PlantAgendaList } from './PlantAgendaList';
+import { typography } from '@/app/theme/typography';
 
 export default function PlantCalendarView() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -41,6 +42,24 @@ export default function PlantCalendarView() {
         // Calendar-specific properties
         hideExtraDays={false}
         firstDay={1}
+        theme={{
+          calendarBackground: '#fff',
+          monthTextColor: '#5a6736',
+          textSectionTitleColor: '#5a6736',
+          selectedDayBackgroundColor: '#d6844b',
+          selectedDayTextColor: '#ffffff',
+          todayTextColor: '#d6844b',
+          dayTextColor: '#5a6736',
+          textDisabledColor: '#d5d5d5',
+          arrowColor: '#5a6736',
+          // Add font families
+          textDayFontFamily: 'Poppins',
+          textMonthFontFamily: 'PoppinsSemiBold',
+          textDayHeaderFontFamily: 'PoppinsMedium',
+          textDayFontSize: 16,
+          textMonthFontSize: 18,
+          textDayHeaderFontSize: 14,
+        }}
       />
       <View style={[
         styles.agendaContainer,
