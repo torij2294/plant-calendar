@@ -17,7 +17,7 @@ const USERS_COLLECTION = 'users';
 
 interface CreatePlantData {
   name: string;
-  image: string;
+  imageUrl: string;
   sunPreferences: string;
   wateringNeeds: string;
   careDescription: string;
@@ -122,4 +122,15 @@ export async function getUserPlants(userId: string): Promise<Plant[]> {
     console.error('Error fetching user plants:', error);
     throw new Error('Failed to fetch user plants');
   }
+}
+
+export async function generatePlantProfile(name: string): Promise<Omit<Plant, 'id' | 'createdAt'>> {
+  // This would be replaced with actual OpenAI API call
+  return {
+    name,
+    imageUrl: 'https://placeholder.com/plant-image.jpg',
+    sunPreferences: 'Bright indirect light',
+    wateringNeeds: 'Water when top inch of soil is dry',
+    careDescription: `${name} is a beautiful plant that thrives in indoor environments...`,
+  };
 } 

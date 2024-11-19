@@ -1,0 +1,80 @@
+[debug] [2024-11-19T09:40:49.562Z] ----------------------------------------------------------------------
+[debug] [2024-11-19T09:40:49.566Z] Command:       /usr/local/bin/node /usr/local/bin/firebase init functions
+[debug] [2024-11-19T09:40:49.567Z] CLI Version:   13.25.0
+[debug] [2024-11-19T09:40:49.567Z] Platform:      darwin
+[debug] [2024-11-19T09:40:49.567Z] Node Version:  v20.2.0
+[debug] [2024-11-19T09:40:49.567Z] Time:          Tue Nov 19 2024 01:40:49 GMT-0800 (Pacific Standard Time)
+[debug] [2024-11-19T09:40:49.568Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2024-11-19T09:40:49.571Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2024-11-19T09:40:49.689Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2024-11-19T09:40:49.689Z] > authorizing via signed-in user (torij2294@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /Users/victoria/Projects/plant-calendar
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] [2024-11-19T09:40:49.693Z] Using project from CLI flag: plant-calendar-cc46a
+[debug] [2024-11-19T09:40:49.693Z] Checked if tokens are valid: false, expires at: 1731911694242
+[debug] [2024-11-19T09:40:49.694Z] Checked if tokens are valid: false, expires at: 1731911694242
+[debug] [2024-11-19T09:40:49.694Z] > refreshing access token with scopes: []
+[debug] [2024-11-19T09:40:49.695Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2024-11-19T09:40:49.695Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2024-11-19T09:40:49.865Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2024-11-19T09:40:49.865Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2024-11-19T09:40:49.920Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/plant-calendar-cc46a [none]
+[debug] [2024-11-19T09:40:50.079Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2024-11-19T09:40:50.079Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2024-11-19T09:40:50.179Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/plant-calendar-cc46a 200
+[debug] [2024-11-19T09:40:50.179Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/plant-calendar-cc46a {"projectId":"plant-calendar-cc46a","projectNumber":"245153145160","displayName":"Plant Calendar","name":"projects/plant-calendar-cc46a","resources":{"hostingSite":"plant-calendar-cc46a"},"state":"ACTIVE","etag":"1_1dbf59ea-3c12-4153-9519-fc675e393335"}
+[info] i  Using project plant-calendar-cc46a (Plant Calendar) 
+[info] 
+=== Functions Setup
+[debug] [2024-11-19T09:40:50.208Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2024-11-19T09:40:50.209Z] > authorizing via signed-in user (torij2294@gmail.com)
+[debug] [2024-11-19T09:40:50.209Z] [iam] checking project plant-calendar-cc46a for permissions ["firebase.projects.get"]
+[debug] [2024-11-19T09:40:50.210Z] Checked if tokens are valid: true, expires at: 1732012848865
+[debug] [2024-11-19T09:40:50.210Z] Checked if tokens are valid: true, expires at: 1732012848865
+[debug] [2024-11-19T09:40:50.210Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/plant-calendar-cc46a:testIamPermissions [none]
+[debug] [2024-11-19T09:40:50.210Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/plant-calendar-cc46a:testIamPermissions x-goog-quota-user=projects/plant-calendar-cc46a
+[debug] [2024-11-19T09:40:50.210Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/plant-calendar-cc46a:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2024-11-19T09:40:50.422Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/plant-calendar-cc46a:testIamPermissions 200
+[debug] [2024-11-19T09:40:50.422Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/plant-calendar-cc46a:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2024-11-19T09:40:50.423Z] Checked if tokens are valid: true, expires at: 1732012848865
+[debug] [2024-11-19T09:40:50.423Z] Checked if tokens are valid: true, expires at: 1732012848865
+[debug] [2024-11-19T09:40:50.423Z] Checked if tokens are valid: true, expires at: 1732012848865
+[debug] [2024-11-19T09:40:50.423Z] Checked if tokens are valid: true, expires at: 1732012848865
+[debug] [2024-11-19T09:40:50.423Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/plant-calendar-cc46a/services/cloudfunctions.googleapis.com [none]
+[debug] [2024-11-19T09:40:50.423Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/plant-calendar-cc46a/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/plant-calendar-cc46a
+[debug] [2024-11-19T09:40:50.424Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/plant-calendar-cc46a/services/runtimeconfig.googleapis.com [none]
+[debug] [2024-11-19T09:40:50.424Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/plant-calendar-cc46a/services/runtimeconfig.googleapis.com x-goog-quota-user=projects/plant-calendar-cc46a
+[debug] [2024-11-19T09:40:50.974Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/plant-calendar-cc46a/services/runtimeconfig.googleapis.com 200
+[debug] [2024-11-19T09:40:50.974Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/plant-calendar-cc46a/services/runtimeconfig.googleapis.com [omitted]
+[debug] [2024-11-19T09:40:50.975Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/plant-calendar-cc46a/services/cloudfunctions.googleapis.com 200
+[debug] [2024-11-19T09:40:50.975Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/plant-calendar-cc46a/services/cloudfunctions.googleapis.com [omitted]
+[info] Let's create a new codebase for your functions.
+[info] A directory corresponding to the codebase will be created in your project
+[info] with sample code pre-configured.
+
+[info] See https://firebase.google.com/docs/functions/organize-functions for
+[info] more information on organizing your functions using codebases.
+
+[info] Functions can be deployed with firebase deploy.
+
