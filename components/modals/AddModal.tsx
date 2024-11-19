@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   Modal, 
   View, 
@@ -6,7 +6,16 @@ import {
   TouchableOpacity, 
   Text,
   Animated,
+  TextInput,
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
+import { searchPlants, addPlant, generatePlantProfile } from '@/services/plantService';
+import { Plant } from '@/types/plants';
+import debounce from 'lodash/debounce';
 
 interface AddModalProps {
   isVisible: boolean;
@@ -14,8 +23,52 @@ interface AddModalProps {
 }
 
 export function AddModal({ isVisible, onClose }: AddModalProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<Plant[]>([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(600)).current;
+
+  // Debounced search function
+  const debouncedSearch = debounce(async (term: string) => {
+    if (!term.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await searchPlants(term.trim());
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, 500);
+
+  // Handle search input changes
+  const handleSearch = (text: string) => {
+    setSearchTerm(text);
+    debouncedSearch(text);
+  };
+
+  // Handle adding a new plant
+  const handleAddPlant = async (name: string) => {
+    setIsSearching(true);
+    try {
+      // Generate plant profile using AI
+      const plantProfile = await generatePlantProfile(name);
+      // Add to global plants collection
+      const newPlant = await addPlant(plantProfile);
+      // TODO: Add to user's plants collection
+      console.log('Plant added:', newPlant);
+    } catch (error) {
+      console.error('Error adding plant:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   useEffect(() => {
     if (isVisible) {
@@ -76,42 +129,98 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
       visible={isVisible}
       onRequestClose={handleClose}
     >
-      <Animated.View 
-        style={[
-          styles.overlay,
-          {
-            opacity: fadeAnim,
-          }
-        ]}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <TouchableOpacity 
-          style={styles.overlayTouch}
-          onPress={handleClose}
-          activeOpacity={1}
-        />
-      </Animated.View>
-
-      <View style={styles.centeredView}>
         <Animated.View 
           style={[
-            styles.modalView,
+            styles.overlay,
             {
-              transform: [{
-                translateY: slideAnim
-              }]
+              opacity: fadeAnim,
             }
           ]}
         >
-          <Text style={styles.modalText}>Add New Item</Text>
-          
-          <TouchableOpacity
-            style={styles.closeButton}
+          <TouchableOpacity 
+            style={styles.overlayTouch}
             onPress={handleClose}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
+            activeOpacity={1}
+          />
         </Animated.View>
-      </View>
+
+        <View style={styles.centeredView}>
+          <Animated.View 
+            style={[
+              styles.modalView,
+              {
+                transform: [{
+                  translateY: slideAnim
+                }]
+              }
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalText}>Search Plants</Text>
+            </View>
+            
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search for a plant..."
+              value={searchTerm}
+              onChangeText={handleSearch}
+              returnKeyType="search"
+            />
+
+            {isSearching && (
+              <ActivityIndicator style={styles.loader} color="#d6844b" />
+            )}
+
+            <ScrollView 
+              style={styles.scrollView}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.scrollViewContent}
+            >
+              {searchResults.length > 0 ? (
+                <FlatList
+                  data={searchResults}
+                  keyExtractor={(item) => item.id!}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity 
+                      style={styles.resultItem}
+                      onPress={() => handleAddPlant(item.name)}
+                    >
+                      <Text style={styles.resultText}>{item.name}</Text>
+                    </TouchableOpacity>
+                  )}
+                  scrollEnabled={false}
+                  nestedScrollEnabled={true}
+                />
+              ) : (
+                searchTerm.trim() && !isSearching && (
+                  <TouchableOpacity 
+                    style={styles.addNewButton}
+                    onPress={() => handleAddPlant(searchTerm.trim())}
+                  >
+                    <Text style={styles.addNewText}>
+                      Add "{searchTerm}" as new plant
+                    </Text>
+                  </TouchableOpacity>
+                )
+              )}
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={handleClose}
+              >
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -136,7 +245,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 24,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -145,12 +253,65 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    minHeight: '50%',
+    height: '80%', // Fixed height
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    padding: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   modalText: {
     fontSize: 20,
     fontFamily: 'PoppinsSemiBold',
-    marginBottom: 16,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    margin: 24,
+    fontSize: 16,
+    fontFamily: 'Poppins',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  loader: {
+    marginVertical: 20,
+  },
+  resultItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  resultText: {
+    fontSize: 16,
+    fontFamily: 'Poppins',
+  },
+  addNewButton: {
+    padding: 16,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+    marginTop: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#d6844b',
+  },
+  addNewText: {
+    fontSize: 16,
+    fontFamily: 'Poppins',
+    color: '#d6844b',
+    textAlign: 'center',
+  },
+  modalFooter: {
+    padding: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
   closeButton: {
     backgroundColor: '#d6844b',
