@@ -4,8 +4,8 @@ import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, P
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { View, Text } from 'react-native';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { Redirect } from 'expo-router';
 
 export {
   ErrorBoundary,
@@ -17,11 +17,54 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync();
 
+export default function RootLayout() {
+  console.log('RootLayout rendering');
+  const [loaded, error] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    ...FontAwesome.font,
+  });
+
+  useEffect(() => {
+    console.log('Font loading status:', loaded);
+    console.log('Font loading error:', error);
+    
+    if (loaded) {
+      SplashScreen.hideAsync().catch(console.error);
+    }
+  }, [loaded]);
+
+  if (!loaded) {
+    console.log('Fonts not loaded yet');
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
+        <Text>Loading fonts...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <ThemeProvider value={DefaultTheme}>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
+
 function RootLayoutNav() {
   const { user, loading } = useAuth();
+  
+  console.log('RootLayoutNav - Auth state:', { user, loading });
 
   if (loading) {
-    return null;
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
+        <Text>Loading auth...</Text>
+      </View>
+    );
   }
 
   return (
@@ -39,35 +82,5 @@ function RootLayoutNav() {
         </>
       )}
     </Stack>
-  );
-}
-
-export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    ...FontAwesome.font,
-    Poppins: Poppins_400Regular,
-    PoppinsMedium: Poppins_500Medium,
-    PoppinsSemiBold: Poppins_600SemiBold,
-    PoppinsBold: Poppins_700Bold,
-  });
-
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
-  return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
   );
 }

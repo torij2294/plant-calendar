@@ -15,12 +15,23 @@ import { router } from 'expo-router';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { updateUserWelcomeInfo } from '@/services/user';
 
-// Generate array of profile image sources
-const profileImages = Array.from({ length: 13 }, (_, i) => ({
-  id: i + 1,
-  source: require(`@/assets/images/profile-images/profile-${i + 1}.png`)
-}));
+// Create a static mapping of profile images
+const profileImages = [
+  { id: 1, source: require('@/assets/images/profile-images/profile-1.png') },
+  { id: 2, source: require('@/assets/images/profile-images/profile-2.png') },
+  { id: 3, source: require('@/assets/images/profile-images/profile-3.png') },
+  { id: 4, source: require('@/assets/images/profile-images/profile-4.png') },
+  { id: 5, source: require('@/assets/images/profile-images/profile-5.png') },
+  { id: 6, source: require('@/assets/images/profile-images/profile-6.png') },
+  { id: 7, source: require('@/assets/images/profile-images/profile-7.png') },
+  { id: 8, source: require('@/assets/images/profile-images/profile-8.png') },
+  { id: 9, source: require('@/assets/images/profile-images/profile-9.png') },
+  { id: 11, source: require('@/assets/images/profile-images/profile-11.png') },
+  { id: 12, source: require('@/assets/images/profile-images/profile-12.png') },
+  { id: 13, source: require('@/assets/images/profile-images/profile-13.png') },
+];
 
 export default function WelcomeScreen() {
   const { user } = useAuth();
@@ -37,13 +48,9 @@ export default function WelcomeScreen() {
 
     try {
       if (user) {
-        await updateDoc(doc(db, 'users', user.uid), {
-          avatarId: selectedAvatar,
-          location: {
-            country: country.trim(),
-            city: city.trim(),
-          },
-          setupComplete: true,
+        await updateUserWelcomeInfo(user.uid, selectedAvatar, {
+          country: country.trim(),
+          city: city.trim(),
         });
         router.replace('/(tabs)');
       }
@@ -157,17 +164,18 @@ const styles = StyleSheet.create({
   avatarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
     paddingVertical: 16,
   },
   avatarContainer: {
     width: '30%',
     aspectRatio: 1,
-    marginBottom: 16,
-    borderRadius: 12,
-    padding: 8,
+    marginBottom: 20,
+    borderRadius: 100,
+    padding: 10,
     borderWidth: 2,
     borderColor: 'transparent',
+    overflow: 'hidden',
   },
   selectedAvatar: {
     borderColor: '#d6844b',
@@ -176,7 +184,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: '100%',
     height: '100%',
-    borderRadius: 8,
+    borderRadius: 100,
   },
   formSection: {
     marginTop: 24,

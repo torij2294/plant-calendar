@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Text, FlatList } from 'react-native';
-import { typography } from '@/app/theme/typography';
+import { typography } from '@/theme/typography';
 
 type PlantEvent = {
   id: string;
@@ -10,12 +10,14 @@ type PlantEvent = {
 }
 
 export function PlantAgendaList({ selectedDate }: { selectedDate: string }) {
+  const data: PlantEvent[] = [];
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Planting Schedule</Text>
-      <FlatList
+      <FlatList<PlantEvent>
         style={styles.list}
-        data={[]} // This will be populated from API
+        data={data}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.eventItem}>

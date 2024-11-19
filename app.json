@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "your.app.scheme",
+    "scheme": "plantingapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -27,17 +27,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png",
-      "config": {
-        "firebase": {
-          "apiKey": "your-api-key",
-          "authDomain": "your-auth-domain",
-          "projectId": "your-project-id",
-          "storageBucket": "your-storage-bucket",
-          "messagingSenderId": "your-messaging-sender-id",
-          "appId": "your-app-id"
-        }
-      }
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
@@ -46,14 +36,6 @@
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "firebaseApiKey": "your-api-key",
-      "firebaseAuthDomain": "your-auth-domain",
-      "firebaseProjectId": "plant-calendar-cc46a",
-      "firebaseStorageBucket": "your-storage-bucket",
-      "firebaseMessagingSenderId": "your-messaging-sender-id",
-      "firebaseAppId": "your-app-id"
     }
   }
 }

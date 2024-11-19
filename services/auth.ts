@@ -7,19 +7,21 @@ import {
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
 import * as Google from 'expo-auth-session/providers/google';
+import { createUserProfile } from '@/services/user';
 
 // Email/Password Sign Up
-export const signUp = async (email: string, password: string, name: string) => {
+export const signUp = async (
+  email: string, 
+  password: string, 
+  firstName: string,
+  lastName: string
+) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const { uid } = userCredential.user;
 
-    // Create user profile in Firestore
-    await setDoc(doc(db, 'users', uid), {
-      name,
-      email,
-      createdAt: serverTimestamp(),
-    });
+    // Create user profile using the service
+    await createUserProfile(uid, email, firstName, lastName);
 
     return userCredential.user;
   } catch (error: any) {
@@ -51,12 +53,14 @@ export const useGoogleAuth = () => {
         const credential = GoogleAuthProvider.credential(id_token);
         const userCredential = await signInWithCredential(auth, credential);
 
-        // Create/update user profile in Firestore
-        await setDoc(doc(db, 'users', userCredential.user.uid), {
-          name: userCredential.user.displayName,
-          email: userCredential.user.email,
-          lastLogin: serverTimestamp(),
-        }, { merge: true });
+        // Create/update user profile using the service
+        const names = userCredential.user.displayName?.split(' ') || ['', ''];
+        await createUserProfile(
+          userCredential.user.uid,
+          userCredential.user.email || '',
+          names[0],
+          names[1]
+        );
 
         return userCredential.user;
       }

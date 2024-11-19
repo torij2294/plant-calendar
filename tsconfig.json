@@ -6,12 +6,22 @@
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "typeRoots": ["./types", "./node_modules/@types"],
+    "types": [
+      "react-native",
+      "jest",
+      "node"
+    ]
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }

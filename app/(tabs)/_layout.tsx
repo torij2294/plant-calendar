@@ -1,8 +1,10 @@
+import EventEmitter from '@/types/global';
+
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-import { typography } from '@/app/theme/typography';
+import { typography } from '@/theme/typography';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { auth } from '@/config/firebase';
@@ -38,7 +40,7 @@ export default function TabLayout() {
         },
         headerTitleAlign: 'center',
         headerRight: () => (
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={handleLogout}
             style={{ marginRight: 16 }}
           >

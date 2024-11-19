@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { CalendarList } from 'react-native-calendars';
 import { PlantAgendaList } from './PlantAgendaList';
-import { typography } from '@/app/theme/typography';
+import { typography } from '@/theme/typography';
 import EventEmitter from 'eventemitter3';
 
-// Initialize EventEmitter if it doesn't exist
-if (!global.EventEmitter) {
-  global.EventEmitter = new EventEmitter();
+// Create a global event emitter if it doesn't exist
+if (!global.eventEmitter) {
+  global.eventEmitter = new EventEmitter();
 }
 
 export default function PlantCalendarView() {
@@ -20,14 +20,25 @@ export default function PlantCalendarView() {
     const resetListener = () => {
       const today = new Date().toISOString().split('T')[0];
       setSelectedDate(today);
-      calendarRef.current?.scrollToMonth(today);
+      if (calendarRef.current && 'scrollToMonth' in calendarRef.current) {
+        (calendarRef.current as any).scrollToMonth(today);
+      }
     };
 
-    global.EventEmitter.on('resetCalendar', resetListener);
+    // Safely add and remove event listeners
+    const emitter = global.eventEmitter;
+    if (emitter) {
+      emitter.on('resetCalendar', resetListener);
 
-    return () => {
-      global.EventEmitter.off('resetCalendar', resetListener);
-    };
+      // Cleanup function
+      return () => {
+        if (emitter) {
+          emitter.off('resetCalendar', resetListener);
+        }
+      };
+    }
+
+    return () => {}; // Return empty cleanup if no emitter
   }, []);
 
   const calendarHeight = monthRows === 5 ? 300 : 340;
@@ -62,6 +73,7 @@ export default function PlantCalendarView() {
         hideExtraDays={false}
         firstDay={1}
         theme={{
+          // Colors
           calendarBackground: '#fff',
           monthTextColor: '#5a6736',
           textSectionTitleColor: '#5a6736',
@@ -71,17 +83,13 @@ export default function PlantCalendarView() {
           dayTextColor: '#5a6736',
           textDisabledColor: '#d5d5d5',
           arrowColor: '#5a6736',
-          
-          // Font families from typography
+
+          // Font families - use only supported properties
           textDayFontFamily: typography.calendar.dayText.fontFamily,
           textMonthFontFamily: typography.calendar.monthText.fontFamily,
           textDayHeaderFontFamily: typography.calendar.dayHeader.fontFamily,
-          textSectionTitleFontFamily: typography.calendar.sectionTitle.fontFamily,
-          todayTextFontFamily: typography.calendar.today.fontFamily,
-          selectedDayTextFontFamily: typography.calendar.selectedDay.fontFamily,
-          disabledTextFontFamily: typography.calendar.disabled.fontFamily,
-          
-          // Font sizes from typography
+
+          // Font sizes
           textDayFontSize: typography.calendar.dayText.fontSize,
           textMonthFontSize: typography.calendar.monthText.fontSize,
           textDayHeaderFontSize: typography.calendar.dayHeader.fontSize,

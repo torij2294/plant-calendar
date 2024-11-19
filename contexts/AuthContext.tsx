@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '@/config/firebase';
+import { auth, db } from '@/config/firebase';
 import { User } from 'firebase/auth';
-import { router } from 'expo-router';
+import { router, usePathname, useSegments } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/config/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -18,30 +17,43 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+  const segments = useSegments();
 
   useEffect(() => {
+    console.log('AuthProvider initializing...');
+    
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      console.log('Auth state changed:', user ? 'User logged in' : 'No user');
       setUser(user);
       
-      if (user) {
-        // Check if user has completed setup
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const userData = userDoc.data();
-        
-        if (!userData?.setupComplete) {
-          router.replace('/welcome');
-        } else if (router.getCurrentPath() === '/welcome') {
-          router.replace('/(tabs)');
+      try {
+        if (user) {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const userData = userDoc.data();
+          console.log('User data:', userData);
+          
+          setTimeout(() => {
+            if (!userData?.setupComplete) {
+              router.replace('/welcome');
+            } else if (pathname === '/welcome') {
+              router.replace('/(tabs)');
+            }
+          }, 0);
+        } else if (pathname !== '/login' && pathname !== '/signup') {
+          setTimeout(() => {
+            router.replace('/login');
+          }, 0);
         }
-      } else if (router.getCurrentPath() !== '/login' && router.getCurrentPath() !== '/signup') {
-        router.replace('/login');
+      } catch (error) {
+        console.error('Error in auth state change:', error);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
     return unsubscribe;
-  }, []);
+  }, [pathname]);
 
   return (
     <AuthContext.Provider value={{ user, loading }}>

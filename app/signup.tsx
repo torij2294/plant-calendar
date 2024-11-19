@@ -29,9 +29,8 @@ export default function SignupScreen() {
     }
 
     try {
-      const fullName = `${firstName} ${lastName}`.trim();
-      await signUp(email, password, fullName);
-      router.replace('/(tabs)');
+      await signUp(email, password, firstName, lastName);
+      router.replace('/welcome');
     } catch (error: any) {
       Alert.alert('Error', error.message);
     }
