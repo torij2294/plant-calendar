@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { updateUserWelcomeInfo } from '@/services/user';
@@ -48,10 +48,20 @@ export default function WelcomeScreen() {
 
     try {
       if (user) {
-        await updateUserWelcomeInfo(user.uid, selectedAvatar, {
-          country: country.trim(),
-          city: city.trim(),
-        });
+        // Get the user's first name and last name from Firestore
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const userData = userDoc.data();
+
+        await updateUserWelcomeInfo(
+          user.uid, 
+          selectedAvatar, 
+          {
+            country: country.trim(),
+            city: city.trim(),
+          },
+          userData?.firstName,  // Pass existing first name
+          userData?.lastName    // Pass existing last name
+        );
         router.replace('/(tabs)');
       }
     } catch (error) {

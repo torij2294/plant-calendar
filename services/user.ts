@@ -16,7 +16,10 @@ interface UserProfile {
   email: string;
   firstName: string;
   lastName: string;
-  avatarId: number;
+  avatar: {
+    id: number;
+    name: string;
+  };
   location: UserLocation;
   setupComplete: boolean;
   createdAt: Date;
@@ -36,6 +39,10 @@ export async function createUserProfile(
     email,
     firstName,
     lastName,
+    avatar: {
+      id: 1,  // Default avatar
+      name: 'default-avatar'
+    },
     setupComplete: false,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -47,13 +54,17 @@ export async function createUserProfile(
 export async function updateUserWelcomeInfo(
   uid: string,
   avatarId: number,
-  location: UserLocation
+  location: UserLocation,
+  firstName?: string,
+  lastName?: string
 ): Promise<void> {
   const userRef = doc(db, 'users', uid);
   
   await updateDoc(userRef, {
-    avatarId,
+    avatar: avatarId,
     location,
+    firstName,
+    lastName,
     setupComplete: true,
     updatedAt: new Date(),
   });
@@ -68,4 +79,15 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   }
   
   return userDoc.data() as UserProfile;
+}
+
+export async function updateUserProfile(userId: string, data: {
+  firstName?: string;
+  lastName?: string;
+  avatar?: number;
+  country?: string;
+  city?: string;
+}) {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, data);
 } 
