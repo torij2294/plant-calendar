@@ -40,7 +40,7 @@ export default function ProfileScreen() {
     firstName: '',
     lastName: '',
     email: user?.email || '',
-    avatar: 1,
+    avatar: null,
     country: '',
     city: '',
   });
@@ -57,7 +57,7 @@ export default function ProfileScreen() {
             firstName: data.firstName || '',
             lastName: data.lastName || '',
             email: user.email || '',
-            avatar: data.avatar?.id || 1,
+            avatar: data.avatar || null,
             country: data.location?.country || '',
             city: data.location?.city || '',
           };
@@ -141,7 +141,11 @@ export default function ProfileScreen() {
         >
           <View style={styles.avatarSection}>
             <Image 
-              source={profileImages.find(img => img.id === (isEditing ? editedData.avatar : userData.avatar))?.source}
+              source={
+                (isEditing ? editedData.avatar : userData.avatar) 
+                  ? profileImages.find(img => img.id === (isEditing ? editedData.avatar : userData.avatar))?.source
+                  : require('@/assets/images/profile-images/profile-1.png')
+              }
               style={styles.avatar}
             />
             {isEditing && (
@@ -283,9 +287,6 @@ const styles = StyleSheet.create({
   avatar: {
     width: 120,
     height: 120,
-    borderRadius: 60,
-    borderWidth: 2,
-    borderColor: '#d6844b',
   },
   avatarPicker: {
     marginTop: 20,

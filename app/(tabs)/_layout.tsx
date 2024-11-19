@@ -1,4 +1,4 @@
-import EventEmitter from '@/types/global';
+import { eventEmitter } from '@/services/eventEmitter';
 
 import React, { useState, useEffect } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -115,9 +115,12 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="calendar" color={color} />,
           tabBarLabel: 'Calendar',
           headerTitle: ({ children }) => (
-            <TouchableOpacity onPress={() => {
-              global.EventEmitter?.emit('resetCalendar');
-            }}>
+            <TouchableOpacity 
+              onPress={() => {
+                console.log('Calendar title pressed');
+                eventEmitter.emit('resetCalendar');
+              }}
+            >
               <Text style={styles.headerTitle}>{children}</Text>
             </TouchableOpacity>
           ),

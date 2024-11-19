@@ -3,12 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { CalendarList } from 'react-native-calendars';
 import { PlantAgendaList } from './PlantAgendaList';
 import { typography } from '@/theme/typography';
-import EventEmitter from 'eventemitter3';
-
-// Create a global event emitter if it doesn't exist
-if (!global.eventEmitter) {
-  global.eventEmitter = new EventEmitter();
-}
+import { eventEmitter } from '@/services/eventEmitter';
 
 export default function PlantCalendarView() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -18,6 +13,7 @@ export default function PlantCalendarView() {
   useEffect(() => {
     // Listen for reset calendar events
     const resetListener = () => {
+      console.log('Reset calendar triggered');
       const today = new Date().toISOString().split('T')[0];
       setSelectedDate(today);
       if (calendarRef.current && 'scrollToMonth' in calendarRef.current) {
@@ -25,20 +21,13 @@ export default function PlantCalendarView() {
       }
     };
 
-    // Safely add and remove event listeners
-    const emitter = global.eventEmitter;
-    if (emitter) {
-      emitter.on('resetCalendar', resetListener);
+    // Add listener
+    eventEmitter.on('resetCalendar', resetListener);
 
-      // Cleanup function
-      return () => {
-        if (emitter) {
-          emitter.off('resetCalendar', resetListener);
-        }
-      };
-    }
-
-    return () => {}; // Return empty cleanup if no emitter
+    // Cleanup
+    return () => {
+      eventEmitter.off('resetCalendar', resetListener);
+    };
   }, []);
 
   const calendarHeight = monthRows === 5 ? 300 : 340;
