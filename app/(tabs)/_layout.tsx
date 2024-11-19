@@ -5,12 +5,14 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { typography } from '@/theme/typography';
-import { TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, Image, View } from 'react-native';
 import { router } from 'expo-router';
 import { auth } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
+import { Ionicons } from '@expo/vector-icons';
+import { AddModal } from '@/components/modals/AddModal';
 
 const profileImages = [
   { id: 1, source: require('@/assets/images/profile-images/profile-1.png') },
@@ -46,6 +48,7 @@ const handleLogout = async () => {
 export default function TabLayout() {
   const { user } = useAuth();
   const [userData, setUserData] = useState<any>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   // Fetch user data for avatar
   useEffect(() => {
@@ -61,108 +64,151 @@ export default function TabLayout() {
   }, [user]);
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: '#d6844b',
-        tabBarInactiveTintColor: '#c4cb89',
-        headerShown: true,
-        tabBarLabelStyle: typography.tabBar,
-        headerTitleStyle: {
-          fontFamily: 'PoppinsSemiBold',
-          fontSize: 20,
-          color: '#5a6736',
-        },
-        headerTitleAlign: 'center',
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={() => router.push('/profile')}
-            style={{ marginRight: 16 }}
-          >
-            {userData?.avatar ? (
-              <Image
-                source={profileImages.find(img => img.id === userData.avatar)?.source}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                }}
-                defaultSource={require('@/assets/images/profile-images/profile-1.png')}
-              />
-            ) : (
-              <FontAwesome name="user-circle" size={32} color="#5a6736" />
-            )}
-          </TouchableOpacity>
-        ),
-        tabBarStyle: {
-          display: 'flex',
-          height: 85,
-          paddingTop: 12,
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: '#fff',
-          borderTopWidth: 0,
-        },
-        tabBarIconStyle: {
-          marginBottom: 8,
-        },
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Calendar',
-          tabBarIcon: ({ color }) => <TabBarIcon name="calendar" color={color} />,
-          tabBarLabel: 'Calendar',
-          headerTitle: ({ children }) => (
-            <TouchableOpacity 
-              onPress={() => {
-                console.log('Calendar title pressed');
-                eventEmitter.emit('resetCalendar');
-              }}
+    <>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: '#d6844b',
+          tabBarInactiveTintColor: '#c4cb89',
+          headerShown: true,
+          tabBarLabelStyle: typography.tabBar,
+          headerTitleStyle: {
+            fontFamily: 'PoppinsSemiBold',
+            fontSize: 20,
+            color: '#5a6736',
+          },
+          headerTitleAlign: 'center',
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => router.push('/profile')}
+              style={{ marginRight: 16 }}
             >
-              <Text style={styles.headerTitle}>{children}</Text>
+              {userData?.avatar ? (
+                <Image
+                  source={profileImages.find(img => img.id === userData.avatar)?.source}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                  }}
+                  defaultSource={require('@/assets/images/profile-images/profile-1.png')}
+                />
+              ) : (
+                <FontAwesome name="user-circle" size={32} color="#5a6736" />
+              )}
             </TouchableOpacity>
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="two"
-        options={{
-          title: 'Plants',
-          tabBarIcon: ({ color }) => <TabBarIcon name="pagelines" color={color} />,
-          tabBarLabel: 'Plants',
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => (
-            userData?.avatar ? (
-              <Image
-                source={profileImages.find(img => img.id === userData.avatar)?.source}
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 14,
-                }}
-              />
-            ) : (
-              <TabBarIcon name="user" color={color} />
-            )
-          ),
-        }}
-        listeners={{
-          tabPress: (e) => {
-            // Prevent default behavior
-            e.preventDefault();
-            // Navigate to profile screen
-            router.push('/profile');
+          tabBarStyle: {
+            display: 'flex',
+            height: 85,
+            paddingTop: 12,
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: '#fff',
+            borderTopWidth: 0,
           },
-        }}
+          tabBarIconStyle: {
+            marginBottom: 8,
+          },
+        }}>
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Calendar',
+            tabBarIcon: ({ color }) => <TabBarIcon name="calendar" color={color} />,
+            tabBarLabel: 'Calendar',
+            headerTitle: ({ children }) => (
+              <TouchableOpacity 
+                onPress={() => {
+                  console.log('Calendar title pressed');
+                  eventEmitter.emit('resetCalendar');
+                }}
+              >
+                <Text style={styles.headerTitle}>{children}</Text>
+              </TouchableOpacity>
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="add"
+          options={{
+            tabBarButton: () => (
+              <TouchableOpacity
+                onPress={() => setIsModalVisible(true)}
+                style={{
+                  top: -20,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <View
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 28,
+                    backgroundColor: '#d6844b',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowColor: "#000",
+                    shadowOffset: {
+                      width: 0,
+                      height: 2,
+                    },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                    elevation: 5,
+                  }}
+                >
+                  <Ionicons name="add" size={32} color="white" />
+                </View>
+              </TouchableOpacity>
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="two"
+          options={{
+            title: 'Plants',
+            tabBarIcon: ({ color }) => <TabBarIcon name="pagelines" color={color} />,
+            tabBarLabel: 'Plants',
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({ color }) => (
+              userData?.avatar ? (
+                <Image
+                  source={profileImages.find(img => img.id === userData.avatar)?.source}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                  }}
+                />
+              ) : (
+                <TabBarIcon name="user" color={color} />
+              )
+            ),
+          }}
+          listeners={{
+            tabPress: (e) => {
+              // Prevent default behavior
+              e.preventDefault();
+              // Navigate to profile screen
+              router.push('/profile');
+            },
+          }}
+        />
+      </Tabs>
+
+      <AddModal 
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
       />
-    </Tabs>
+    </>
   );
 }
 
