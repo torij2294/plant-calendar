@@ -10,13 +10,15 @@ import {
   Image,
   SafeAreaView,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { getCurrentLocation, validateLocation } from '@/services/location';
 
 const profileImages = [
   { id: 1, source: require('@/assets/images/profile-images/profile-1.png') },
@@ -36,13 +38,18 @@ const profileImages = [
 export default function ProfileScreen() {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const [userData, setUserData] = useState({
     firstName: '',
     lastName: '',
     email: user?.email || '',
     avatar: null,
-    country: '',
-    city: '',
+    location: {
+      latitude: null,
+      longitude: null,
+      city: '',
+      country: ''
+    }
   });
   const [editedData, setEditedData] = useState({...userData});
 
@@ -58,8 +65,12 @@ export default function ProfileScreen() {
             lastName: data.lastName || '',
             email: user.email || '',
             avatar: data.avatar || null,
-            country: data.location?.country || '',
-            city: data.location?.city || '',
+            location: {
+              latitude: data.location?.latitude || null,
+              longitude: data.location?.longitude || null,
+              city: data.location?.city || '',
+              country: data.location?.country || '',
+            }
           };
           setUserData(userInfo);
           setEditedData(userInfo);
@@ -69,6 +80,26 @@ export default function ProfileScreen() {
     fetchUserData();
   }, [user]);
 
+  const handleUpdateLocation = async () => {
+    setIsUpdatingLocation(true);
+    try {
+      const locationData = await getCurrentLocation();
+      if (locationData) {
+        setEditedData(prev => ({
+          ...prev,
+          location: locationData
+        }));
+      } else {
+        Alert.alert('Error', 'Could not fetch location. Please make sure location services are enabled.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update location');
+      console.error(error);
+    } finally {
+      setIsUpdatingLocation(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       if (!user) return;
@@ -77,8 +108,7 @@ export default function ProfileScreen() {
         firstName: editedData.firstName,
         lastName: editedData.lastName,
         avatar: editedData.avatar,
-        country: editedData.country,
-        city: editedData.city,
+        location: editedData.location
       });
 
       setUserData(editedData);
@@ -198,24 +228,28 @@ export default function ProfileScreen() {
                   <Text style={styles.label}>Email</Text>
                   <Text style={styles.value}>{userData.email}</Text>
                 </View>
-                <View style={styles.editRow}>
-                  <Text style={styles.label}>Country</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={editedData.country}
-                    onChangeText={(text) => setEditedData({...editedData, country: text})}
-                    returnKeyType="next"
-                    blurOnSubmit={false}
-                  />
-                </View>
-                <View style={styles.editRow}>
-                  <Text style={styles.label}>City</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={editedData.city}
-                    onChangeText={(text) => setEditedData({...editedData, city: text})}
-                    returnKeyType="done"
-                  />
+
+                <View style={styles.locationSection}>
+                  <TouchableOpacity 
+                    style={styles.locationButton}
+                    onPress={handleUpdateLocation}
+                    disabled={isUpdatingLocation}
+                  >
+                    {isUpdatingLocation ? (
+                      <ActivityIndicator color="#5a6736" />
+                    ) : (
+                      <Text style={styles.locationButtonText}>
+                        Update Current Location
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+
+                  <View style={styles.locationInfo}>
+                    <Text style={styles.label}>Current Location</Text>
+                    <Text style={styles.value}>
+                      {editedData.location.city}, {editedData.location.country}
+                    </Text>
+                  </View>
                 </View>
               </>
             ) : (
@@ -223,23 +257,36 @@ export default function ProfileScreen() {
                 <InfoRow label="First Name" value={userData.firstName} />
                 <InfoRow label="Last Name" value={userData.lastName} />
                 <InfoRow label="Email" value={userData.email} />
-                <InfoRow label="Country" value={userData.country} />
-                <InfoRow label="City" value={userData.city} />
+                <InfoRow 
+                  label="Location" 
+                  value={`${userData.location.city}, ${userData.location.country}`} 
+                />
               </>
             )}
           </View>
           
-          {/* Add extra padding at bottom for keyboard */}
           <View style={{ height: 100 }} />
         </ScrollView>
 
         {isEditing && (
           <View style={styles.bottomButtons}>
-            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+            <TouchableOpacity 
+              style={styles.cancelButton} 
+              onPress={handleCancel}
+              disabled={isUpdatingLocation}
+            >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>Save Changes</Text>
+            <TouchableOpacity 
+              style={[styles.saveButton, isUpdatingLocation && styles.saveButtonDisabled]} 
+              onPress={handleSave}
+              disabled={isUpdatingLocation}
+            >
+              {isUpdatingLocation ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -378,5 +425,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontFamily: 'PoppinsSemiBold',
     fontSize: 16,
+  },
+  locationSection: {
+    marginTop: 16,
+  },
+  locationButton: {
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  locationButtonText: {
+    color: '#5a6736',
+    fontFamily: 'PoppinsSemiBold',
+  },
+  locationInfo: {
+    marginTop: 8,
+  },
+  saveButtonDisabled: {
+    opacity: 0.7,
   },
 }); 

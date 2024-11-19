@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -16,6 +17,8 @@ import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { updateUserWelcomeInfo } from '@/services/user';
+import * as Location from 'expo-location';
+import { getCurrentLocation, validateLocation } from '@/services/location';
 
 // Create a static mapping of profile images
 const profileImages = [
@@ -36,31 +39,45 @@ const profileImages = [
 export default function WelcomeScreen() {
   const { user } = useAuth();
   const [selectedAvatar, setSelectedAvatar] = useState(1);
-  const [country, setCountry] = useState('');
-  const [city, setCity] = useState('');
-  const [step, setStep] = useState(1); // 1 for avatar, 2 for location
+  const [location, setLocation] = useState(null);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+
+  useEffect(() => {
+    getLocation();
+  }, []);
+
+  const getLocation = async () => {
+    setIsGettingLocation(true);
+    try {
+      const locationData = await getCurrentLocation();
+      if (locationData) {
+        setLocation(locationData);
+      } else {
+        Alert.alert(
+          'Location Required', 
+          'Please enable location services to continue'
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to get location');
+    } finally {
+      setIsGettingLocation(false);
+    }
+  };
 
   const handleComplete = async () => {
-    if (!country.trim() || !city.trim()) {
-      Alert.alert('Error', 'Please fill in both country and city');
+    if (!location) {
+      Alert.alert('Error', 'Location is required to continue');
       return;
     }
 
     try {
       if (user) {
-        // Get the user's first name and last name from Firestore
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const userData = userDoc.data();
-
         await updateUserWelcomeInfo(
           user.uid, 
-          selectedAvatar, 
-          {
-            country: country.trim(),
-            city: city.trim(),
-          },
-          userData?.firstName,  // Pass existing first name
-          userData?.lastName    // Pass existing last name
+          selectedAvatar,
+          location
         );
         router.replace('/(tabs)');
       }
@@ -71,79 +88,76 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {step === 1 ? (
-        // Avatar Selection Step
-        <View style={styles.stepContainer}>
-          <Text style={styles.title}>Choose Your Avatar</Text>
-          <Text style={styles.subtitle}>Pick an avatar that represents you</Text>
-          
-          <ScrollView 
-            contentContainerStyle={styles.avatarGrid}
-            showsVerticalScrollIndicator={false}
-          >
-            {profileImages.map((image) => (
-              <TouchableOpacity
-                key={image.id}
-                style={[
-                  styles.avatarContainer,
-                  selectedAvatar === image.id && styles.selectedAvatar
-                ]}
-                onPress={() => setSelectedAvatar(image.id)}
-              >
-                <Image 
-                  source={image.source}
-                  style={styles.avatar}
-                />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+      <View style={styles.stepContainer}>
+        <Text style={styles.title}>Choose Your Avatar</Text>
+        <Text style={styles.subtitle}>Pick an avatar that represents you</Text>
+        
+        <ScrollView 
+          contentContainerStyle={styles.avatarGrid}
+          showsVerticalScrollIndicator={false}
+        >
+          {profileImages.map((image) => (
+            <TouchableOpacity
+              key={image.id}
+              style={[
+                styles.avatarContainer,
+                selectedAvatar === image.id && styles.selectedAvatar
+              ]}
+              onPress={() => setSelectedAvatar(image.id)}
+            >
+              <Image 
+                source={image.source}
+                style={styles.avatar}
+              />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
+        <View style={styles.locationSection}>
+          {location ? (
+            <View style={styles.locationInfo}>
+              <Text style={styles.locationText}>
+                Location: {location.city}, {location.country}
+              </Text>
+              <TouchableOpacity 
+                style={styles.updateLocationButton}
+                onPress={getLocation}
+              >
+                <Text style={styles.updateLocationText}>Update Location</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity 
+              style={styles.locationButton}
+              onPress={getLocation}
+              disabled={isGettingLocation}
+            >
+              {isGettingLocation ? (
+                <ActivityIndicator color="#5a6736" />
+              ) : (
+                <Text style={styles.locationButtonText}>
+                  Get Current Location
+                </Text>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.buttonRow}>
           <TouchableOpacity 
-            style={styles.nextButton}
-            onPress={() => setStep(2)}
+            style={[styles.button, styles.backButton]}
+            onPress={() => setStep(1)}
           >
-            <Text style={styles.buttonText}>Next</Text>
+            <Text style={[styles.buttonText, styles.backButtonText]}>Back</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.button, styles.completeButton]}
+            onPress={handleComplete}
+          >
+            <Text style={styles.buttonText}>Complete</Text>
           </TouchableOpacity>
         </View>
-      ) : (
-        // Location Selection Step
-        <View style={styles.stepContainer}>
-          <Text style={styles.title}>Where Are You Located?</Text>
-          <Text style={styles.subtitle}>This helps us suggest plants suitable for your climate</Text>
-
-          <View style={styles.formSection}>
-            <TextInput
-              style={styles.input}
-              placeholder="Country"
-              value={country}
-              onChangeText={setCountry}
-              placeholderTextColor="#666"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="City"
-              value={city}
-              onChangeText={setCity}
-              placeholderTextColor="#666"
-            />
-          </View>
-
-          <View style={styles.buttonRow}>
-            <TouchableOpacity 
-              style={[styles.button, styles.backButton]}
-              onPress={() => setStep(1)}
-            >
-              <Text style={[styles.buttonText, styles.backButtonText]}>Back</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.button, styles.completeButton]}
-              onPress={handleComplete}
-            >
-              <Text style={styles.buttonText}>Complete</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -242,5 +256,46 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: '#d6844b',
+  },
+  locationButton: {
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  locationButtonText: {
+    color: '#5a6736',
+    fontFamily: 'PoppinsSemiBold',
+  },
+  inputError: {
+    borderColor: '#ff6b6b',
+  },
+  errorText: {
+    color: '#ff6b6b',
+    fontSize: 14,
+    fontFamily: 'Poppins',
+    marginTop: 4,
+  },
+  locationSection: {
+    marginTop: 16,
+  },
+  locationInfo: {
+    marginTop: 8,
+  },
+  locationText: {
+    color: '#5a6736',
+    fontFamily: 'PoppinsSemiBold',
+  },
+  updateLocationButton: {
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  updateLocationText: {
+    color: '#5a6736',
+    fontFamily: 'PoppinsSemiBold',
   },
 }); 

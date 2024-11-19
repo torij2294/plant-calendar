@@ -4,8 +4,7 @@ import { db } from '@/config/firebase';
 interface UserLocation {
   country: string;
   city: string;
-  // We can add more location details later if needed
-  coordinates?: {
+  coords?: {
     latitude: number;
     longitude: number;
   };
