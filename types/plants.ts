@@ -1,18 +1,21 @@
 export interface Plant {
   id: string;
-  name: string;
-  displayName: string;
-  normalizedName: string;
+  
+  // AI-generated fields from profile
+  displayName: string;     // The common name returned by AI
+  sunPreference: string;
+  wateringPreference: string;
+  generalInformation: string;
+  
+  // UI and search fields
   imageUrl: string;
-  sunPreferences: string;
-  wateringNeeds: string;
-  careDescription: string;
+  normalizedName: string;  // Normalized version of displayName for search
+  userQuery: string;       // The original name entered by the user
+  
+  // Metadata and user-specific fields
+  createdBy: string;
   createdAt: number;
   updatedAt: number;
-  createdBy?: string;
-  
-  // User-specific fields
-  addedToUserCollectionAt?: number;
   lastWateredAt?: number | null;
   notes?: string;
   customCareInstructions?: string;

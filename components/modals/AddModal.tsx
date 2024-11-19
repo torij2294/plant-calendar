@@ -13,9 +13,11 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { searchPlants, addPlant, generatePlantProfile } from '@/services/plantService';
+import { createNewPlant, searchExistingPlants } from '@/services/plantService';
 import { Plant } from '@/types/plants';
 import debounce from 'lodash/debounce';
+import { useAuth } from '@/contexts/AuthContext';' 
+import { PlantTile } from '@/components/plants/PlantTile';
 
 interface AddModalProps {
   isVisible: boolean;
@@ -28,6 +30,9 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
   const [searchResults, setSearchResults] = useState<Plant[]>([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(600)).current;
+  const [status, setStatus] = useState<'idle' | 'checking' | 'generating' | 'saving'>('idle');
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   // Debounced search function
   const debouncedSearch = debounce(async (term: string) => {
@@ -38,8 +43,8 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
 
     setIsSearching(true);
     try {
-      const results = await searchPlants(term.trim());
-      setSearchResults(results);
+      const existingPlants = await searchExistingPlants(term);
+      setSearchResults(existingPlants);
     } catch (error) {
       console.error('Search error:', error);
     } finally {
@@ -50,23 +55,26 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
   // Handle search input changes
   const handleSearch = (text: string) => {
     setSearchTerm(text);
+    setError(null);
     debouncedSearch(text);
   };
 
   // Handle adding a new plant
-  const handleAddPlant = async (name: string) => {
-    setIsSearching(true);
+  const handleAddPlant = async () => {
+    if (!searchTerm.trim() || !user) return;
+    
+    setStatus('checking');
+    setError(null);
+    
     try {
-      // Generate plant profile using AI
-      const plantProfile = await generatePlantProfile(name);
-      // Add to global plants collection
-      const newPlant = await addPlant(plantProfile);
-      // TODO: Add to user's plants collection
-      console.log('Plant added:', newPlant);
-    } catch (error) {
-      console.error('Error adding plant:', error);
-    } finally {
-      setIsSearching(false);
+      setStatus('generating');
+      const newPlant = await createNewPlant(searchTerm.trim(), user.uid);
+      
+      setStatus('saving');
+      onClose();
+    } catch (error: any) {
+      setError(error.message);
+      setStatus('idle');
     }
   };
 
@@ -172,8 +180,19 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
               returnKeyType="search"
             />
 
-            {isSearching && (
-              <ActivityIndicator style={styles.loader} color="#d6844b" />
+            {error && (
+              <Text style={styles.errorText}>{error}</Text>
+            )}
+
+            {status !== 'idle' && (
+              <View style={styles.statusContainer}>
+                <ActivityIndicator color="#d6844b" />
+                <Text style={styles.statusText}>
+                  {status === 'checking' && 'Verifying plant name...'}
+                  {status === 'generating' && 'Generating plant profile...'}
+                  {status === 'saving' && 'Saving plant...'}
+                </Text>
+              </View>
             )}
 
             <ScrollView 
@@ -181,26 +200,28 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.scrollViewContent}
             >
+              {isSearching && (
+                <ActivityIndicator style={styles.loader} color="#d6844b" />
+              )}
+
               {searchResults.length > 0 ? (
-                <FlatList
-                  data={searchResults}
-                  keyExtractor={(item) => item.id!}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity 
-                      style={styles.resultItem}
-                      onPress={() => handleAddPlant(item.name)}
-                    >
-                      <Text style={styles.resultText}>{item.name}</Text>
-                    </TouchableOpacity>
-                  )}
-                  scrollEnabled={false}
-                  nestedScrollEnabled={true}
-                />
+                <View style={styles.resultsContainer}>
+                  {searchResults.map((plant) => (
+                    <PlantTile
+                      key={plant.id}
+                      plant={plant}
+                      onPress={(selectedPlant) => {
+                        // Handle selecting existing plant
+                        console.log('Selected plant:', selectedPlant.displayName);
+                      }}
+                    />
+                  ))}
+                </View>
               ) : (
                 searchTerm.trim() && !isSearching && (
                   <TouchableOpacity 
                     style={styles.addNewButton}
-                    onPress={() => handleAddPlant(searchTerm.trim())}
+                    onPress={handleAddPlant}
                   >
                     <Text style={styles.addNewText}>
                       Add "{searchTerm}" as new plant
@@ -278,7 +299,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollViewContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingBottom: 24,
   },
   loader: {
@@ -292,6 +313,11 @@ const styles = StyleSheet.create({
   resultText: {
     fontSize: 16,
     fontFamily: 'Poppins',
+  },
+  resultSubtext: {
+    fontSize: 14,
+    fontFamily: 'Poppins',
+    color: '#666',
   },
   addNewButton: {
     padding: 16,
@@ -323,5 +349,27 @@ const styles = StyleSheet.create({
     color: 'white',
     fontFamily: 'PoppinsSemiBold',
     fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
+    fontFamily: 'Poppins',
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  statusText: {
+    marginLeft: 12,
+    fontFamily: 'Poppins',
+    fontSize: 14,
+    color: '#666',
+  },
+  resultsContainer: {
+    paddingTop: 8,
   },
 }); 

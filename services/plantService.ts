@@ -1,136 +1,100 @@
 import { db } from '@/config/firebase';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { Plant } from '@/types/plants';
-import { 
-  doc, 
-  setDoc, 
-  collection,
-  query,
-  where,
-  getDocs,
-  serverTimestamp,
-  DocumentReference,
-  orderBy
-} from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
-const PLANTS_COLLECTION = 'plants';
-const USERS_COLLECTION = 'users';
+const functions = getFunctions();
+const getPlantProfileFunction = httpsCallable(functions, 'getPlantProfile');
 
-interface CreatePlantData {
-  name: string;
-  imageUrl: string;
-  sunPreferences: string;
-  wateringNeeds: string;
-  careDescription: string;
+function normalizePlantName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-export async function createPlant(
-  plantData: CreatePlantData, 
+const DEFAULT_PLANT_IMAGE = 'https://your-default-plant-image-url.com/default.jpg';
+
+export async function createNewPlant(
+  userQuery: string, 
   userId: string
-): Promise<{ globalPlant: Plant; userPlant: Plant }> {
-  // Create a sanitized version of the plant name for the document ID
-  const plantId = plantData.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
-  
-  // Create the base plant data
-  const timestamp = serverTimestamp();
-  const basePlantData = {
-    ...plantData,
-    normalizedName: plantData.name.toLowerCase(),
-    displayName: plantData.name,
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  };
-
-  // Create references
-  const globalPlantRef = doc(db, PLANTS_COLLECTION, plantId);
-  const userPlantRef = doc(
-    db, 
-    USERS_COLLECTION, 
-    userId, 
-    'plants', 
-    plantId
-  );
-
+): Promise<Plant> {
   try {
-    // Global plant data includes creator information
-    const globalPlantData = {
-      ...basePlantData,
-      createdBy: userId,
+    const result = await getPlantProfileFunction({ plantName: userQuery });
+    const response = result.data as {
+      exists: boolean;
+      plantProfile?: {
+        name: string;
+        sunPreference: string;
+        wateringPreference: string;
+        generalInformation: string;
+      };
+      imagePrompt?: string;
+      imageUrl?: string;
     };
 
-    // User plant data includes additional user-specific fields
-    const userPlantData = {
-      ...basePlantData,
-      addedToUserCollectionAt: timestamp,
+    if (!response.exists) {
+      throw new Error('This does not appear to be a valid plant name');
+    }
+
+    if (!response.plantProfile) {
+      throw new Error('Failed to generate plant information');
+    }
+
+    const timestamp = Date.now();
+    const normalizedName = normalizePlantName(response.plantProfile.name);
+    
+    // Create new plant document
+    const plantData: Omit<Plant, 'id'> = {
+      displayName: response.plantProfile.name,
+      sunPreference: response.plantProfile.sunPreference,
+      wateringPreference: response.plantProfile.wateringPreference,
+      generalInformation: response.plantProfile.generalInformation,
+      imageUrl: response.imageUrl || DEFAULT_PLANT_IMAGE, // Use generated image if available
+      normalizedName,
+      userQuery,
+      createdBy: userId,
+      createdAt: timestamp,
+      updatedAt: timestamp,
       lastWateredAt: null,
       notes: '',
       customCareInstructions: '',
     };
 
-    // Write both documents in parallel
-    await Promise.all([
-      setDoc(globalPlantRef, globalPlantData),
-      setDoc(userPlantRef, userPlantData),
-    ]);
+    // Add to Firestore
+    const plantsRef = collection(db, 'plants');
+    const docRef = await addDoc(plantsRef, plantData);
 
     return {
-      globalPlant: { id: plantId, ...globalPlantData } as Plant,
-      userPlant: { id: plantId, ...userPlantData } as Plant,
+      id: docRef.id,
+      ...plantData,
     };
   } catch (error) {
-    console.error('Error creating plant:', error);
-    throw new Error('Failed to create plant');
+    console.error('Error creating new plant:', error);
+    throw error;
   }
 }
 
-export async function searchPlants(searchTerm: string): Promise<Plant[]> {
-  const normalizedTerm = searchTerm.toLowerCase().trim();
-  
-  if (!normalizedTerm) {
-    return [];
-  }
-
-  const plantsRef = collection(db, PLANTS_COLLECTION);
-  const q = query(
-    plantsRef,
-    where('normalizedName', '>=', normalizedTerm),
-    where('normalizedName', '<=', normalizedTerm + '\uf8ff'),
-    orderBy('normalizedName')
-  );
-
+// Function to search existing plants
+export async function searchExistingPlants(searchTerm: string): Promise<Plant[]> {
   try {
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    } as Plant));
+    const plantsRef = collection(db, 'plants');
+    const normalizedSearch = searchTerm.toLowerCase().trim();
+    
+    // Query plants where normalizedName contains the search term
+    const q = query(
+      plantsRef,
+      where('normalizedName', '>=', normalizedSearch),
+      where('normalizedName', '<=', normalizedSearch + '\uf8ff')
+    );
+
+    const querySnapshot = await getDocs(q);
+    const plants: Plant[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      plants.push({ id: doc.id, ...doc.data() } as Plant);
+    });
+
+    return plants;
   } catch (error) {
     console.error('Error searching plants:', error);
-    throw new Error('Failed to search plants');
+    throw error;
   }
-}
-
-export async function getUserPlants(userId: string): Promise<Plant[]> {
-  const userPlantsRef = collection(db, USERS_COLLECTION, userId, 'plants');
-  
-  try {
-    const snapshot = await getDocs(userPlantsRef);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    } as Plant));
-  } catch (error) {
-    console.error('Error fetching user plants:', error);
-    throw new Error('Failed to fetch user plants');
-  }
-}
-
-export async function generatePlantProfile(name: string): Promise<Omit<Plant, 'id' | 'createdAt'>> {
-  // This would be replaced with actual OpenAI API call
-  return {
-    name,
-    imageUrl: 'https://placeholder.com/plant-image.jpg',
-    sunPreferences: 'Bright indirect light',
-    wateringNeeds: 'Water when top inch of soil is dry',
-    careDescription: `${name} is a beautiful plant that thrives in indoor environments...`,
-  };
 } 
