@@ -1,16 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { CalendarList } from 'react-native-calendars';
 import { PlantAgendaList } from './PlantAgendaList';
 import { typography } from '@/app/theme/typography';
+import EventEmitter from 'eventemitter3';
+
+// Initialize EventEmitter if it doesn't exist
+if (!global.EventEmitter) {
+  global.EventEmitter = new EventEmitter();
+}
 
 export default function PlantCalendarView() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [monthRows, setMonthRows] = useState(6);
+  const calendarRef = useRef(null);
+
+  useEffect(() => {
+    // Listen for reset calendar events
+    const resetListener = () => {
+      const today = new Date().toISOString().split('T')[0];
+      setSelectedDate(today);
+      calendarRef.current?.scrollToMonth(today);
+    };
+
+    global.EventEmitter.on('resetCalendar', resetListener);
+
+    return () => {
+      global.EventEmitter.off('resetCalendar', resetListener);
+    };
+  }, []);
+
+  const calendarHeight = monthRows === 5 ? 300 : 340;
 
   return (
     <View style={styles.container}>
       <CalendarList
+        ref={calendarRef}
         current={selectedDate}
         onDayPress={(day) => setSelectedDate(day.dateString)}
         markedDates={{
@@ -23,9 +48,6 @@ export default function PlantCalendarView() {
           const rows = Math.ceil((firstDay + daysInMonth) / 7);
           setMonthRows(rows);
         }}
-        style={{
-          height: monthRows === 5 ? 300 : 340  // Adjust these values as needed
-        }}
         // Horizontal scrolling properties
         horizontal={true}
         pagingEnabled={true}
@@ -33,12 +55,9 @@ export default function PlantCalendarView() {
         futureScrollRange={12}
         scrollEnabled={true}
         showScrollIndicator={false}
-        calendarHeight={320}
+        calendarHeight={calendarHeight}
         // Style customization
-        style={{
-          borderWidth: 0,
-          borderRadius: 10,
-        }}
+        style={styles.calendar}
         // Calendar-specific properties
         hideExtraDays={false}
         firstDay={1}
@@ -52,18 +71,25 @@ export default function PlantCalendarView() {
           dayTextColor: '#5a6736',
           textDisabledColor: '#d5d5d5',
           arrowColor: '#5a6736',
-          // Add font families
-          textDayFontFamily: 'Poppins',
-          textMonthFontFamily: 'PoppinsSemiBold',
-          textDayHeaderFontFamily: 'PoppinsMedium',
-          textDayFontSize: 16,
-          textMonthFontSize: 18,
-          textDayHeaderFontSize: 14,
+          
+          // Font families from typography
+          textDayFontFamily: typography.calendar.dayText.fontFamily,
+          textMonthFontFamily: typography.calendar.monthText.fontFamily,
+          textDayHeaderFontFamily: typography.calendar.dayHeader.fontFamily,
+          textSectionTitleFontFamily: typography.calendar.sectionTitle.fontFamily,
+          todayTextFontFamily: typography.calendar.today.fontFamily,
+          selectedDayTextFontFamily: typography.calendar.selectedDay.fontFamily,
+          disabledTextFontFamily: typography.calendar.disabled.fontFamily,
+          
+          // Font sizes from typography
+          textDayFontSize: typography.calendar.dayText.fontSize,
+          textMonthFontSize: typography.calendar.monthText.fontSize,
+          textDayHeaderFontSize: typography.calendar.dayHeader.fontSize,
         }}
       />
       <View style={[
         styles.agendaContainer,
-        { marginTop: monthRows === 5 ? -40 : 0 }  // Adjust this value as needed
+        { marginTop: monthRows === 5 ? -40 : 0 }
       ]}>
         <PlantAgendaList selectedDate={selectedDate} />
       </View>
@@ -76,7 +102,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  calendar: {
+    borderWidth: 0,
+    borderRadius: 10,
+  },
   agendaContainer: {
     flex: 1,
+    backgroundColor: '#fff',
   }
 }); 
