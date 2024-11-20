@@ -177,34 +177,6 @@ export default function TabLayout() {
             tabBarLabel: 'Plants',
           }}
         />
-        <Tabs.Screen
-          name="settings"
-          options={{
-            title: 'Profile',
-            tabBarIcon: ({ color }) => (
-              userData?.avatar ? (
-                <Image
-                  source={profileImages.find(img => img.id === userData.avatar)?.source}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
-                  }}
-                />
-              ) : (
-                <TabBarIcon name="user" color={color} />
-              )
-            ),
-          }}
-          listeners={{
-            tabPress: (e) => {
-              // Prevent default behavior
-              e.preventDefault();
-              // Navigate to profile screen
-              router.push('/profile');
-            },
-          }}
-        />
       </Tabs>
 
       <AddModal 

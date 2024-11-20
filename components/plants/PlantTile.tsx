@@ -1,7 +1,10 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Plant } from '@/types/plants';
 import defaultPlantImage from '@/assets/images/plant-calendar-logo.png';
+import { handlePlantSelection } from '@/services/userPlantsService';
+import { useAuth } from '@/context/AuthContext';
+import { getCurrentLocation } from '@/services/location';
 
 interface PlantTileProps {
   plant: Plant;
@@ -9,10 +12,36 @@ interface PlantTileProps {
 }
 
 export function PlantTile({ plant, onPress }: PlantTileProps) {
+  const { user, userData } = useAuth();
+  
+  const handlePress = async () => {
+    try {
+      const location = await getCurrentLocation();
+      const userLocation = location || {
+        latitude: null,
+        longitude: null,
+        city: userData.city,
+        country: userData.country
+      };
+
+      const result = await handlePlantSelection(plant, user.uid, userLocation);
+      
+      Alert.alert(
+        "Plant Added!",
+        `Best time to plant: ${result.plantingDate}`
+      );
+      
+      onPress(plant);
+    } catch (error) {
+      Alert.alert("Error", "Failed to add plant to your calendar");
+      console.error(error);
+    }
+  };
+
   return (
     <TouchableOpacity 
       style={styles.container}
-      onPress={() => onPress(plant)}
+      onPress={handlePress}
     >
       <View style={styles.imageContainer}>
         <Image 
