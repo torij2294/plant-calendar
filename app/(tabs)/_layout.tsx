@@ -80,14 +80,17 @@ export default function TabLayout() {
           headerRight: () => (
             <TouchableOpacity
               onPress={() => router.push('/profile')}
-              style={{ marginRight: 16 }}
+              style={{ 
+                marginRight: 20,
+                marginBottom: 20 
+              }}
             >
               {userData?.avatar ? (
                 <Image
                   source={profileImages.find(img => img.id === userData.avatar)?.source}
                   style={{
-                    width: 40,
-                    height: 40,
+                    width: 50,
+                    height: 50,
                     borderRadius: 20,
                   }}
                   defaultSource={require('@/assets/images/profile-images/profile-1.png')}

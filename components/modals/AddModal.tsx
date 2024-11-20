@@ -16,7 +16,7 @@ import {
 import { createNewPlant, searchExistingPlants } from '@/services/plantService';
 import { Plant } from '@/types/plants';
 import debounce from 'lodash/debounce';
-import { useAuth } from '@/contexts/AuthContext';' 
+import { useAuth } from '@/contexts/AuthContext'; 
 import { PlantTile } from '@/components/plants/PlantTile';
 
 interface AddModalProps {

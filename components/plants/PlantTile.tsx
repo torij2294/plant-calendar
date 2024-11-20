@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Plant } from '@/types/plants';
+import defaultPlantImage from '@/assets/images/plant-calendar-logo.png';
 
 interface PlantTileProps {
   plant: Plant;
@@ -15,9 +16,8 @@ export function PlantTile({ plant, onPress }: PlantTileProps) {
     >
       <View style={styles.imageContainer}>
         <Image 
-          source={{ uri: plant.imageUrl }}
+          source={plant.imageUrl ? { uri: plant.imageUrl } : defaultPlantImage}
           style={styles.image}
-          defaultSource={require('@/assets/images/default-plant.png')} // Add a default plant image
         />
       </View>
       
