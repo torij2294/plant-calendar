@@ -19,6 +19,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { getCurrentLocation, validateLocation } from '@/services/location';
+import { SignOutButton } from '@/components/ui/SignOutButton';
 
 const profileImages = [
   { id: 1, source: require('@/assets/images/profile-images/profile-1.png') },
@@ -290,6 +291,8 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
         )}
+
+        <SignOutButton />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

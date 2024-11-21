@@ -9,6 +9,7 @@ export interface Plant {
   
   // UI and search fields
   imageUrl: string;
+  imageData?: string;
   normalizedName: string;  // Normalized version of displayName for search
   userQuery: string;       // The original name entered by the user
   
@@ -19,4 +20,5 @@ export interface Plant {
   lastWateredAt?: number | null;
   notes?: string;
   customCareInstructions?: string;
+  imageId?: string;  // Firestore document ID for the image
 } 

@@ -1,52 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Plant } from '@/types/plants';
-import defaultPlantImage from '@/assets/images/plant-calendar-logo.png';
-import { handlePlantSelection } from '@/services/userPlantsService';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { getCurrentLocation } from '@/services/location';
+import { handlePlantSelection } from '@/services/userPlantsService';
+import { storage } from '@/config/firebase';
+import { getDownloadURL, ref } from 'firebase/storage';
+
+const defaultPlantImage = require('@/assets/images/plant-calendar-logo.png');
 
 interface PlantTileProps {
   plant: Plant;
   onPress: (plant: Plant) => void;
+  plantingDate?: string;
 }
 
-export function PlantTile({ plant, onPress }: PlantTileProps) {
+export function PlantTile({ plant, onPress, plantingDate }: PlantTileProps) {
   const { user, userData } = useAuth();
+  const [imageSource, setImageSource] = useState(defaultPlantImage);
+  const [imageError, setImageError] = useState(false);
   
-  const handlePress = async () => {
-    try {
-      const location = await getCurrentLocation();
-      const userLocation = location || {
-        latitude: null,
-        longitude: null,
-        city: userData.city,
-        country: userData.country
-      };
-
-      const result = await handlePlantSelection(plant, user.uid, userLocation);
-      
-      Alert.alert(
-        "Plant Added!",
-        `Best time to plant: ${result.plantingDate}`
-      );
-      
-      onPress(plant);
-    } catch (error) {
-      Alert.alert("Error", "Failed to add plant to your calendar");
-      console.error(error);
+  useEffect(() => {
+    if (plant.imageUrl && plant.imageUrl.startsWith('data:image')) {
+      setImageSource({ uri: plant.imageUrl });
     }
-  };
+  }, [plant.imageUrl]);
+
+  console.log('Plant Tile Render:', {
+    plantName: plant.displayName,
+    imageUrl: plant.imageUrl,
+    hasDefaultImage: !plant.imageUrl,
+    isImageError: imageError
+  });
 
   return (
     <TouchableOpacity 
       style={styles.container}
-      onPress={handlePress}
+      onPress={() => onPress(plant)}
     >
       <View style={styles.imageContainer}>
         <Image 
-          source={plant.imageUrl ? { uri: plant.imageUrl } : defaultPlantImage}
+          source={imageSource}
           style={styles.image}
+          onError={(error) => {
+            console.error('Image loading error:', error.nativeEvent);
+            setImageSource(defaultPlantImage);
+          }}
         />
       </View>
       
@@ -63,6 +62,11 @@ export function PlantTile({ plant, onPress }: PlantTileProps) {
             {plant.sunPreference}
           </Text>
         </View>
+        {plantingDate && (
+          <Text style={styles.dateText}>
+            Plant on: {plantingDate}
+          </Text>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -86,9 +90,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   imageContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: '#f5f5f5',
   },
@@ -121,5 +125,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666666',
     marginHorizontal: 4,
+  },
+  dateText: {
+    fontSize: 14,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#d6844b',
+    marginTop: 4,
   },
 }); 

@@ -2,7 +2,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithCredential,
-  GoogleAuthProvider
+  GoogleAuthProvider,
+  signOut as firebaseSignOut
 } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
@@ -70,4 +71,13 @@ export const useGoogleAuth = () => {
   };
 
   return { request, response, promptAsync, handleGoogleAuth };
+};
+
+// Add sign out function
+export const signOut = async () => {
+  try {
+    await firebaseSignOut(auth);
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
 }; 

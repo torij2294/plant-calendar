@@ -26,10 +26,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPlantProfile = void 0;
+exports.getPlantingDate = exports.getPlantProfile = void 0;
 const functions = __importStar(require("firebase-functions"));
 const openai_1 = __importDefault(require("openai"));
 const dotenv = __importStar(require("dotenv"));
+const admin = __importStar(require("firebase-admin"));
+const node_fetch_1 = __importDefault(require("node-fetch"));
+// Initialize Firebase Admin
+admin.initializeApp();
 // Load environment variables
 dotenv.config();
 const openai = new openai_1.default({
@@ -105,7 +109,7 @@ Input: "${plantName}"`.trim();
 Generate a DALL-E prompt to create an image of a plant based on the following input. Replace "${plantName}" with the user's provided plant name, and generate a description that matches the plant's typical appearance using accurate and verified information. The image should follow these criteria:
 
 - Completely blank, white background.
-- In the center of the image, place a cartoon-style rendering of a single ${plantName}.
+- In the center of the image, place a cute, cartoon-style rendering of a single ${plantName}.
 - Describe the plant's key physical features, such as leaf shape, color, texture, and notable characteristics, in a way that matches its real-world appearance. Ensure the description includes enough detail to make the plant visually recognizable.
 - The plant should appear singular and clearly defined, with clean, natural details, and no other elements or distractions in the image.
 
@@ -137,18 +141,33 @@ Respond with only the generated prompt text, no additional formatting or explana
                     quality: "standard",
                     style: "natural",
                 });
-                const imageUrl = (_c = imageResponse.data[0]) === null || _c === void 0 ? void 0 : _c.url;
-                // Return everything including the generated image URL
-                return {
-                    exists: true,
-                    plantProfile: profileData.plantProfile,
-                    imagePrompt,
-                    imageUrl,
-                };
+                const dalleUrl = (_c = imageResponse.data[0]) === null || _c === void 0 ? void 0 : _c.url;
+                if (dalleUrl) {
+                    // Download the actual image immediately
+                    const response = await (0, node_fetch_1.default)(dalleUrl);
+                    const buffer = await response.buffer();
+                    // Save to Firebase Storage
+                    const bucket = admin.storage().bucket();
+                    const filename = `plant-images/${Date.now()}-${plantName.toLowerCase().replace(/\s+/g, '-')}.png`;
+                    const file = bucket.file(filename);
+                    await file.save(buffer, {
+                        metadata: {
+                            contentType: 'image/png'
+                        }
+                    });
+                    // Make it public
+                    await file.makePublic();
+                    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+                    return {
+                        exists: true,
+                        plantProfile: profileData.plantProfile,
+                        imagePrompt,
+                        imageUrl: publicUrl
+                    };
+                }
             }
             catch (imageError) {
                 console.error("Error generating image:", imageError);
-                // Still return profile data even if image generation fails
                 return {
                     exists: true,
                     plantProfile: profileData.plantProfile,
@@ -163,6 +182,44 @@ Respond with only the generated prompt text, no additional formatting or explana
     catch (error) {
         console.error("Error in plant profile generation:", error);
         throw new functions.https.HttpsError("internal", "Failed to generate plant profile");
+    }
+});
+exports.getPlantingDate = functions.https.onCall(async (data, context) => {
+    var _a, _b;
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "User must be authenticated");
+    }
+    const { plantProfile, location } = data;
+    try {
+        const prompt = `
+      Based on the following data, provide ONLY a recommended planting date in YYYY-MM-DD format for ${location.city}, ${location.country}.
+      
+      Plant: ${plantProfile.name}
+      Growing Requirements:
+      - Sun: ${plantProfile.sunPreference}
+      - Water: ${plantProfile.wateringPreference}
+
+      Consider the typical growing season and climate for ${location.city}, ${location.country}.
+      Return only the date in YYYY-MM-DD format, no other text.
+    `;
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a gardening expert. Respond only with a date in YYYY-MM-DD format.",
+                },
+                { role: "user", content: prompt },
+            ],
+            temperature: 0.7,
+            max_tokens: 20,
+        });
+        const plantingDate = (_b = (_a = completion.choices[0].message) === null || _a === void 0 ? void 0 : _a.content) === null || _b === void 0 ? void 0 : _b.trim();
+        return { plantingDate };
+    }
+    catch (error) {
+        console.error("Error in planting date generation:", error);
+        throw new functions.https.HttpsError("internal", "Failed to generate planting date");
     }
 });
 //# sourceMappingURL=index.js.map

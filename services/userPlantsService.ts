@@ -1,7 +1,8 @@
-import { db, functions } from '@/config/firebase';
+import { db, functions, storage } from '@/config/firebase';
 import { Plant } from '@/types/plants';
 import { httpsCallable } from 'firebase/functions';
 import { doc, setDoc, collection } from 'firebase/firestore';
+import { getDownloadURL, ref } from 'firebase/storage';
 
 const getPlantingDateFunction = httpsCallable(functions, 'getPlantingDate');
 
@@ -28,8 +29,16 @@ export async function handlePlantSelection(
 
     const plantingDate = dateResponse.data.plantingDate;
 
+    // Get the download URL for the image
+    let imageUrl = plant.imageUrl;
+    if (imageUrl && imageUrl.includes('firebase')) {
+      // Get a fresh download URL if it's a Firebase Storage URL
+      const imageRef = ref(storage, imageUrl);
+      imageUrl = await getDownloadURL(imageRef);
+    }
+
     // 2. Add plant to user's collection with planting date
-    const userPlantRef = doc(collection(db, `userProfiles/${userId}/plants`), plant.id);
+    const userPlantRef = doc(db, 'userProfiles', userId, 'plants', plant.id);
     await setDoc(userPlantRef, {
       plantId: plant.id,
       plantingDate,
@@ -38,12 +47,19 @@ export async function handlePlantSelection(
     });
 
     // 3. Add event to user's calendar
-    const calendarRef = doc(collection(db, `userProfiles/${userId}/calendar`), plant.id);
+    const calendarRef = doc(db, 'userProfiles', userId, 'calendar', plant.id);
     await setDoc(calendarRef, {
       date: plantingDate,
       title: `Plant ${plant.displayName}`,
       description: `Time to plant your ${plant.displayName}!`,
       plantId: plant.id,
+      plant: {
+        id: plant.id,
+        displayName: plant.displayName,
+        imageUrl: imageUrl,
+        sunPreference: plant.sunPreference,
+        wateringPreference: plant.wateringPreference
+      },
       createdAt: Date.now()
     });
 
