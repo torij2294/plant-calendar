@@ -228,7 +228,7 @@ exports.getPlantingDate = functions.https.onCall(async (data, context) => {
         // Calculate the appropriate year
         const now = new Date();
         const currentYear = now.getFullYear();
-        const [month, day] = monthDay.split('-').map(num => parseInt(num));
+        const [month, day] = monthDay.split("-").map((num) => parseInt(num));
         // Validate month and day
         if (month < 1 || month > 12 || day < 1 || day > 31) {
             throw new functions.https.HttpsError("internal", "Invalid month or day received from AI");
@@ -245,7 +245,7 @@ exports.getPlantingDate = functions.https.onCall(async (data, context) => {
             plantingDate = suggestedDate;
         }
         // Format the date as YYYY-MM-DD
-        const formattedDate = plantingDate.toISOString().split('T')[0];
+        const formattedDate = plantingDate.toISOString().split("T")[0];
         return { plantingDate: formattedDate };
     }
     catch (error) {

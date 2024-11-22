@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, View, Text, FlatList, Image } from 'react-native';
 import { PlantTile } from '@/components/plants/PlantTile';
 import { Plant } from '@/types/plants';
@@ -32,26 +32,47 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
   const { user } = useAuth();
 
   useEffect(() => {
+    console.log('PlantAgendaList received new month:', currentMonth);
+    
     const fetchMonthEvents = async () => {
       if (!user?.uid) return;
 
       try {
-        console.log('Current Month:', currentMonth);
+        const date = new Date(currentMonth);
+        console.log('Processing month:', {
+          rawDate: date,
+          month: date.getMonth() + 1,
+          year: date.getFullYear()
+        });
+
+        console.log('1. Fetching events for month:', currentMonth);
         const userPlantsRef = collection(db, 'userProfiles', user.uid, 'calendar');
         const q = query(userPlantsRef);
         const querySnapshot = await getDocs(q);
         
-        // Get month and year from currentMonth
+        // Log raw data
+        console.log('2. Raw calendar data:', querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          data: doc.data()
+        })));
+
         const currentDate = new Date(currentMonth);
         const currentMonthNum = currentDate.getMonth();
         const currentYear = currentDate.getFullYear();
+
+        console.log('3. Current month/year:', { currentMonthNum, currentYear });
 
         const events = querySnapshot.docs
           .map(doc => {
             const data = doc.data();
             const eventDate = new Date(data.date);
-            
-            // Only include events from current month and year
+            console.log('4. Processing event:', {
+              date: data.date,
+              eventDate,
+              month: eventDate.getMonth(),
+              year: eventDate.getFullYear()
+            });
+
             if (eventDate.getMonth() === currentMonthNum && 
                 eventDate.getFullYear() === currentYear) {
               return {
@@ -65,7 +86,7 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
           .filter(event => event !== null)
           .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-        console.log('Filtered events:', events);
+        console.log('5. Filtered events:', events);
         setMonthEvents(events);
       } catch (error) {
         console.error('Error fetching month events:', error);
@@ -75,15 +96,16 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
     fetchMonthEvents();
   }, [currentMonth, user?.uid]);
 
-  // Get month name for header
-  const monthName = new Date(currentMonth).toLocaleString('default', { 
-    month: 'long', 
-    year: 'numeric' 
-  });
+  // Add this to verify month name calculation
+  const monthName = useMemo(() => {
+    const date = new Date(currentMonth);
+    const name = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    console.log('Calculated month name:', name);
+    return name;
+  }, [currentMonth]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.monthHeader}>{monthName}</Text>
       {monthEvents.length > 0 ? (
         <FlatList
           data={monthEvents}
@@ -101,11 +123,17 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
               <View style={styles.eventContent}>
                 <Text style={styles.plantName}>{item.plant.displayName}</Text>
                 <Text style={styles.dateText}>
-                  {new Date(item.date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
+                  Plant on: {new Date(item.date).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
                   })}
                 </Text>
+                <View style={styles.detailsContainer}>
+                  <Text style={styles.detailText}>{item.plant.sunPreference}</Text>
+                  <Text style={styles.bulletPoint}> • </Text>
+                  <Text style={styles.detailText}>{item.plant.wateringPreference}</Text>
+                </View>
               </View>
             </View>
           )}
@@ -123,12 +151,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 16,
-  },
-  monthHeader: {
-    fontSize: 18,
-    fontFamily: 'PoppinsSemiBold',
-    color: '#5a6736',
-    marginBottom: 16,
   },
   list: {
     flex: 1,
@@ -159,16 +181,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'PoppinsSemiBold',
     color: '#2c2c2c',
+    marginBottom: 4,
   },
   dateText: {
     fontSize: 14,
-    fontFamily: 'Poppins',
-    color: '#666666',
+    fontFamily: 'PoppinsSemiBold',
+    color: '#d6844b',
+    marginBottom: 4
   },
   noEventsText: {
     textAlign: 'center',
     color: '#666666',
     fontFamily: 'Poppins',
     marginTop: 20,
+  },
+  detailsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  detailText: {
+    fontSize: 14,
+    fontFamily: 'Poppins',
+    color: '#666666',
+  },
+  bulletPoint: {
+    fontSize: 14,
+    fontFamily: 'Poppins',
+    color: '#666666',
+    marginHorizontal: 4,
   },
 }); 

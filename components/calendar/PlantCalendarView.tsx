@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function PlantCalendarView() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [currentMonth, setCurrentMonth] = useState(selectedDate);
+  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().split('T')[0]);
   const [monthRows, setMonthRows] = useState(6);
   const calendarRef = useRef(null);
   const [events, setEvents] = useState<any[]>([]);
@@ -117,6 +117,11 @@ export default function PlantCalendarView() {
     return marked;
   };
 
+  // Add this to track month changes
+  useEffect(() => {
+    console.log('Current month state changed to:', currentMonth);
+  }, [currentMonth]);
+
   return (
     <View style={styles.container}>
       <CalendarList
@@ -125,24 +130,26 @@ export default function PlantCalendarView() {
         onDayPress={(day) => setSelectedDate(day.dateString)}
         markedDates={getMarkedDates()}
         onMonthChange={(month) => {
-          // Format the month correctly
-          const monthStr = `${month.year}-${String(month.month).padStart(2, '0')}-01`;
-          setCurrentMonth(monthStr);
-          
+          // Use the timestamp from the month object
+          console.log('Month changed:', month);
+          const newDate = new Date(month.timestamp);
+          const formattedMonth = newDate.toISOString().split('T')[0];
+          console.log('Setting month to:', formattedMonth);
+          setCurrentMonth(formattedMonth);
+
           // Calculate rows
-          const firstDay = new Date(month.year, month.month - 1, 1).getDay();
-          const daysInMonth = new Date(month.year, month.month, 0).getDate();
+          const firstDay = newDate.getDay();
+          const daysInMonth = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0).getDate();
           const rows = Math.ceil((firstDay + daysInMonth) / 7);
           setMonthRows(rows);
         }}
-        // Horizontal scrolling properties
         horizontal={true}
         pagingEnabled={true}
+        calendarHeight={calendarHeight}
         pastScrollRange={12}
         futureScrollRange={12}
         scrollEnabled={true}
         showScrollIndicator={false}
-        calendarHeight={calendarHeight}
         // Style customization
         style={styles.calendar}
         // Calendar-specific properties
@@ -171,7 +178,7 @@ export default function PlantCalendarView() {
           textDayHeaderFontSize: typography.calendar.dayHeader.fontSize,
         }}
         dayComponent={({date, state, marking}) => {
-          const plants = marking?.plants || []; // Expect an array of plants
+          const plants = marking?.plants || [];
           const isSelected = marking?.selected;
           
           return (
@@ -180,21 +187,11 @@ export default function PlantCalendarView() {
                 styles.dayContainer,
                 isSelected && styles.selectedContainer
               ]}
-              onPress={() => {
-                setSelectedDate(date.dateString);
-                if (plants.length > 1) {
-                  // Optionally show a modal or alert with all plants for this date
-                  Alert.alert(
-                    'Planting Day',
-                    `Plants to plant:\n${plants.map(p => p.displayName).join('\n')}`
-                  );
-                }
-              }}
+              onPress={() => setSelectedDate(date.dateString)}
             >
               {plants.length > 0 ? (
                 <View style={styles.multiplePlantsContainer}>
                   {plants.length > 1 ? (
-                    // Show stacked effect for multiple plants
                     <>
                       <Image 
                         source={{ uri: plants[0].imageUrl }}
@@ -219,7 +216,6 @@ export default function PlantCalendarView() {
                       )}
                     </>
                   ) : (
-                    // Single plant
                     <Image 
                       source={{ uri: plants[0].imageUrl }}
                       style={[
@@ -247,7 +243,11 @@ export default function PlantCalendarView() {
         styles.agendaContainer,
         { marginTop: monthRows === 5 ? -40 : 0 }
       ]}>
-        <PlantAgendaList selectedDate={selectedDate} currentMonth={currentMonth} />
+        <PlantAgendaList 
+          key={currentMonth} // Add this to force refresh
+          selectedDate={selectedDate} 
+          currentMonth={currentMonth}
+        />
       </View>
     </View>
   );

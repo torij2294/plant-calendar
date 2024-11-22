@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { PlantTile } from '@/components/plants/PlantTile';
 import { format } from 'date-fns';
+import { Plant } from '@/types/plants';
 
 interface CalendarEventItemProps {
   event: {
