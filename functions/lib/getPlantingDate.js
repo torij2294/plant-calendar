@@ -34,5 +34,5 @@
 //     console.error('Error:', error);
 //     throw new functions.https.HttpsError('internal', 'Failed to generate planting date');
 //   }
-// }); 
+// });
 //# sourceMappingURL=getPlantingDate.js.map

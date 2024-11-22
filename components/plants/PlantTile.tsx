@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Plant } from '@/types/plants';
-import { useAuth } from '@/contexts/AuthContext';
-import { getCurrentLocation } from '@/services/location';
 import { handlePlantSelection } from '@/services/userPlantsService';
-import { storage } from '@/config/firebase';
-import { getDownloadURL, ref } from 'firebase/storage';
+import { useAuth } from '@/contexts/AuthContext';
+import { Alert } from 'react-native';
+import { getCurrentLocation, type LocationData } from '@/services/location';
 
 const defaultPlantImage = require('@/assets/images/plant-calendar-logo.png');
 
@@ -16,36 +15,69 @@ interface PlantTileProps {
 }
 
 export function PlantTile({ plant, onPress, plantingDate }: PlantTileProps) {
-  const { user, userData } = useAuth();
-  const [imageSource, setImageSource] = useState(defaultPlantImage);
-  const [imageError, setImageError] = useState(false);
-  
+  const { user } = useAuth();
+  const [imageSource, setImageSource] = useState<any>(defaultPlantImage);
+
   useEffect(() => {
-    if (plant.imageUrl && plant.imageUrl.startsWith('data:image')) {
-      setImageSource({ uri: plant.imageUrl });
+    if (plant.imageUrl) {
+      const imageUri = plant.imageUrl.trim();
+      console.log('Loading image from URL:', imageUri);
+      
+      setImageSource({
+        uri: imageUri,
+        cache: 'reload',
+        headers: {
+          Accept: 'image/png,image/jpeg,image/jpg',
+        },
+      });
     }
   }, [plant.imageUrl]);
 
-  console.log('Plant Tile Render:', {
-    plantName: plant.displayName,
-    imageUrl: plant.imageUrl,
-    hasDefaultImage: !plant.imageUrl,
-    isImageError: imageError
-  });
+  const handleImageError = () => {
+    console.error('Failed to load image:', plant.imageUrl);
+    setImageSource(defaultPlantImage);
+  };
+
+  const handleAddPlant = async () => {
+    if (!user) {
+      Alert.alert('Error', 'You must be logged in to add plants');
+      return;
+    }
+
+    try {
+      // Get user's location
+      const location = await getCurrentLocation();
+      if (!location) {
+        Alert.alert('Error', 'Unable to get your location');
+        return;
+      }
+
+      const result = await handlePlantSelection(plant, user.uid, location);
+      
+      if (result.success) {
+        Alert.alert(
+          'Success', 
+          `${plant.displayName} has been added to your garden! Planting date: ${result.plantingDate}`
+        );
+      }
+    } catch (error) {
+      console.error('Error adding plant:', error);
+      Alert.alert('Error', 'Failed to add plant to your garden');
+    }
+  };
 
   return (
     <TouchableOpacity 
       style={styles.container}
-      onPress={() => onPress(plant)}
+      onPress={handleAddPlant}
     >
       <View style={styles.imageContainer}>
         <Image 
           source={imageSource}
           style={styles.image}
-          onError={(error) => {
-            console.error('Image loading error:', error.nativeEvent);
-            setImageSource(defaultPlantImage);
-          }}
+          onError={handleImageError}
+          onLoad={() => console.log('Image loaded successfully:', plant.imageUrl)}
+          loadingIndicatorSource={defaultPlantImage}
         />
       </View>
       

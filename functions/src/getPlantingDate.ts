@@ -11,11 +11,11 @@
 //   }
 
 //   const { plantProfile, location } = data;
-  
+
 //   try {
 //     const prompt = `
 //       Based on the following data, provide ONLY a recommended planting date in YYYY-MM-DD format for ${location.city}, ${location.country}.
-      
+
 //       Plant: ${plantProfile.name}
 //       Growing Requirements:
 //       - Sun: ${plantProfile.sunPreference}
@@ -42,4 +42,4 @@
 //     console.error('Error:', error);
 //     throw new functions.https.HttpsError('internal', 'Failed to generate planting date');
 //   }
-// }); 
+// });

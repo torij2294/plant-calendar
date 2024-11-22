@@ -9,15 +9,12 @@ const getPlantingDateFunction = httpsCallable(functions, 'getPlantingDate');
 export async function handlePlantSelection(
   plant: Plant, 
   userId: string, 
-  userLocation: { 
-    latitude: number | null; 
-    longitude: number | null; 
-    city: string; 
-    country: string 
-  }
+  userLocation: LocationData
 ) {
   try {
-    // 1. Get planting date from Firebase Function
+    console.log('Starting plant selection process...', {plant, userId, userLocation});
+
+    // Get planting date
     const dateResponse = await getPlantingDateFunction({
       plantProfile: {
         name: plant.displayName,
@@ -27,48 +24,44 @@ export async function handlePlantSelection(
       location: userLocation
     });
 
-    const plantingDate = dateResponse.data.plantingDate;
+    console.log('Received planting date:', dateResponse.data.plantingDate);
 
-    // Get the download URL for the image
-    let imageUrl = plant.imageUrl;
-    if (imageUrl && imageUrl.includes('firebase')) {
-      // Get a fresh download URL if it's a Firebase Storage URL
-      const imageRef = ref(storage, imageUrl);
-      imageUrl = await getDownloadURL(imageRef);
-    }
-
-    // 2. Add plant to user's collection with planting date
+    // Add to user's plants
     const userPlantRef = doc(db, 'userProfiles', userId, 'plants', plant.id);
     await setDoc(userPlantRef, {
       plantId: plant.id,
-      plantingDate,
+      plantingDate: dateResponse.data.plantingDate,
       addedToCalendar: true,
       addedAt: Date.now()
     });
 
-    // 3. Add event to user's calendar
+    console.log('Added to user plants collection');
+
+    // Add to calendar
     const calendarRef = doc(db, 'userProfiles', userId, 'calendar', plant.id);
     await setDoc(calendarRef, {
-      date: plantingDate,
+      date: dateResponse.data.plantingDate,
       title: `Plant ${plant.displayName}`,
       description: `Time to plant your ${plant.displayName}!`,
       plantId: plant.id,
       plant: {
         id: plant.id,
         displayName: plant.displayName,
-        imageUrl: imageUrl,
+        imageUrl: plant.imageUrl,
         sunPreference: plant.sunPreference,
         wateringPreference: plant.wateringPreference
       },
       createdAt: Date.now()
     });
 
+    console.log('Added to calendar collection');
+
     return {
       success: true,
-      plantingDate
+      plantingDate: dateResponse.data.plantingDate
     };
   } catch (error) {
     console.error('Error in handlePlantSelection:', error);
-    throw new Error('Failed to process plant selection');
+    throw error;
   }
 } 
