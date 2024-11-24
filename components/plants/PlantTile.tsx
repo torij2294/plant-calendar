@@ -5,6 +5,7 @@ import { handlePlantSelection } from '@/services/userPlantsService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert } from 'react-native';
 import { getCurrentLocation, type LocationData } from '@/services/location';
+import { useRouter } from 'expo-router';
 
 const defaultPlantImage = require('@/assets/images/plant-calendar-logo.png');
 
@@ -17,6 +18,7 @@ interface PlantTileProps {
 export function PlantTile({ plant, onPress, plantingDate }: PlantTileProps) {
   const { user } = useAuth();
   const [imageSource, setImageSource] = useState<any>(defaultPlantImage);
+  const router = useRouter();
 
   useEffect(() => {
     if (plant.imageUrl) {
@@ -69,7 +71,7 @@ export function PlantTile({ plant, onPress, plantingDate }: PlantTileProps) {
   return (
     <TouchableOpacity 
       style={styles.container}
-      onPress={handleAddPlant}
+      onPress={() => onPress(plant)}
     >
       <View style={styles.imageContainer}>
         <Image 

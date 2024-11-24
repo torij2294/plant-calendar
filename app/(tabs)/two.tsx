@@ -5,10 +5,11 @@ import { PlantTile } from '@/components/plants/PlantTile';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import { Swipeable } from 'react-native-gesture-handler';
+import { useRouter } from 'expo-router';
 
 export default function TabTwoScreen() {
   const { user } = useAuth();
+  const router = useRouter();
   const [sections, setSections] = useState([
     { title: 'Plants to Plant', data: [] },
     { title: 'Archive', data: [] }
@@ -60,57 +61,17 @@ export default function TabTwoScreen() {
     }
   };
 
-  const handleDelete = async (plantId: string) => {
-    if (!user?.uid) return;
-
-    Alert.alert(
-      'Delete Plant',
-      'Are you sure you want to delete this plant?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteDoc(doc(db, 'userProfiles', user.uid, 'calendar', plantId));
-              fetchUserPlants();
-            } catch (error) {
-              console.error('Error deleting plant:', error);
-              Alert.alert('Error', 'Failed to delete plant');
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const renderPlantTile = ({ item, section }) => {
-    const RightSwipeActions = () => {
-      return (
-        <View style={styles.deleteContainer}>
-          <Text style={styles.deleteText}>Delete</Text>
-        </View>
-      );
-    };
-
-    return (
-      <Swipeable
-        renderRightActions={RightSwipeActions}
-        onSwipeableRightOpen={() => handleDelete(item.id)}
-      >
-        <PlantTile
-          plant={item.plant}
-          onPress={() => {}}
-          plantingDate={new Date(item.plantingDate).toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric'
-          })}
-        />
-      </Swipeable>
-    );
-  };
+  const renderPlantTile = ({ item, section }) => (
+    <PlantTile
+      plant={item.plant}
+      onPress={() => router.push(`/plant/${item.id}`)}
+      plantingDate={new Date(item.plantingDate).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      })}
+    />
+  );
 
   return (
     <View style={styles.container}>

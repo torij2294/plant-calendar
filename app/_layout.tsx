@@ -81,6 +81,7 @@ function RootLayoutNav() {
             <Stack.Screen name="welcome" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="profile" options={{ headerShown: true }} />
+            <Stack.Screen name="plant/[id]" options={{ headerShown: true }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
           </>
         )}
