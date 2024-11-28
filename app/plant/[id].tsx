@@ -137,7 +137,7 @@ export default function PlantProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#faf9f6',
+    backgroundColor: '#f2eee4',
   },
   header: {
     flexDirection: 'row',
@@ -146,6 +146,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 20,
+    backgroundColor: '#f2eee4',
   },
   backButton: {
     padding: 8,

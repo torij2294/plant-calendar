@@ -10,7 +10,7 @@ function normalizePlantName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-const DEFAULT_PLANT_IMAGE = 'https://your-default-plant-image-url.com/default.jpg';
+const DEFAULT_PLANT_IMAGE = 'https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/plant-images%2Fdefault-plant.png?alt=media';
 
 export async function createNewPlant(
   userQuery: string, 

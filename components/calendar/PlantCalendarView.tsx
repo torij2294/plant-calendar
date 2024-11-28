@@ -150,14 +150,11 @@ export default function PlantCalendarView() {
         futureScrollRange={12}
         scrollEnabled={true}
         showScrollIndicator={false}
-        // Style customization
         style={styles.calendar}
-        // Calendar-specific properties
         hideExtraDays={false}
         firstDay={1}
         theme={{
-          // Colors
-          calendarBackground: '#fff',
+          calendarBackground: '#f2eee4',
           monthTextColor: '#5a6736',
           textSectionTitleColor: '#5a6736',
           selectedDayBackgroundColor: '#d6844b',
@@ -166,16 +163,25 @@ export default function PlantCalendarView() {
           dayTextColor: '#5a6736',
           textDisabledColor: '#d5d5d5',
           arrowColor: '#5a6736',
-
-          // Font families - use only supported properties
           textDayFontFamily: typography.calendar.dayText.fontFamily,
           textMonthFontFamily: typography.calendar.monthText.fontFamily,
           textDayHeaderFontFamily: typography.calendar.dayHeader.fontFamily,
-
-          // Font sizes
           textDayFontSize: typography.calendar.dayText.fontSize,
           textMonthFontSize: typography.calendar.monthText.fontSize,
-          textDayHeaderFontSize: typography.calendar.dayHeader.fontSize,
+          textDayHeaderFontSize: 13,
+          dayNamesWidth: 32,
+          dayNamesShort: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+          'stylesheet.calendar.header': {
+            dayHeader: {
+              width: 32,
+              textAlign: 'center',
+              fontSize: typography.calendar.dayHeader.fontSize,
+              fontFamily: typography.calendar.dayHeader.fontFamily,
+              color: '#5a6736',
+              marginTop: 2,
+              marginBottom: 7,
+            },
+          },
         }}
         dayComponent={({date, state, marking}) => {
           const plants = marking?.plants || [];
@@ -230,7 +236,8 @@ export default function PlantCalendarView() {
                 <Text style={[
                   styles.dayText,
                   state === 'disabled' && styles.disabledText,
-                  isSelected && styles.selectedText
+                  isSelected && styles.selectedText,
+                  { color: '#5a6736' }
                 ]}>
                   {date.day}
                 </Text>
@@ -238,6 +245,7 @@ export default function PlantCalendarView() {
             </TouchableOpacity>
           );
         }}
+        dayNamesShort={['M', 'T', 'W', 'T', 'F', 'S', 'S']}
       />
       <View style={[
         styles.agendaContainer,
@@ -256,7 +264,7 @@ export default function PlantCalendarView() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f2eee4',
   },
   calendar: {
     marginBottom: -20,
@@ -316,17 +324,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     bottom: 0,
     right: 0,
-  },
-  extraPlantsIndicator: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: '#d6844b',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   extraPlantsText: {
     color: 'white',

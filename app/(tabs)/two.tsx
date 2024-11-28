@@ -99,7 +99,7 @@ export default function TabTwoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#faf7ef',
   },
   listContent: {
     padding: 16,

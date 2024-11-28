@@ -146,8 +146,11 @@ The prompt should ensure the generated image complies with content policies by b
           style: "natural",
         });
 
+        console.log("DALL-E response:", imageResponse);
+
         const dalleUrl = imageResponse.data[0]?.url;
         if (dalleUrl) {
+          console.log("Generated DALL-E URL:", dalleUrl);
           // Immediately download the image
           const response = await fetch(dalleUrl);
           if (!response.ok) {
@@ -179,6 +182,8 @@ The prompt should ensure the generated image complies with content policies by b
             imagePrompt,
             imageUrl: publicUrl,
           };
+        } else {
+          console.error("No URL in DALL-E response");
         }
       } catch (imageError) {
         console.error("Error generating image:", imageError);

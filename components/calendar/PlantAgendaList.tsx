@@ -159,7 +159,7 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f2eee4',
     padding: 16,
   },
   list: {
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 12,
     marginBottom: 8,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f2eee4',
     borderRadius: 12,
     alignItems: 'center',
   },

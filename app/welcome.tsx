@@ -165,7 +165,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f2eee4',
   },
   stepContainer: {
     flex: 1,

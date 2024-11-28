@@ -19,6 +19,10 @@ import { Plant } from '@/types/plants';
 import debounce from 'lodash/debounce';
 import { useAuth } from '@/contexts/AuthContext'; 
 import { PlantTile } from '@/components/plants/PlantTile';
+import { getCurrentLocation, type LocationData } from '@/services/location';
+import { handlePlantSelection } from '@/services/userPlantsService';
+import { Video } from 'expo-av';
+import { Asset } from 'expo-asset';
 
 interface AddModalProps {
   isVisible: boolean;
@@ -34,6 +38,8 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
   const [status, setStatus] = useState<'idle' | 'checking' | 'generating' | 'saving'>('idle');
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const videoRef = useRef<Video>(null);
 
   // Debounced search function
   const debouncedSearch = debounce(async (term: string) => {
@@ -65,19 +71,22 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
     if (!searchTerm.trim()) return;
     
     try {
-      setStatus('generating');
-      console.log('Starting plant generation for:', searchTerm);
+      if (!user?.uid) {
+        throw new Error('User not logged in');
+      }
       
-      const newPlant = await createNewPlant(searchTerm);
+      setStatus('checking');
+      console.log('Checking plant name:', searchTerm);
+      
+      setStatus('generating');
+      console.log('Starting plant generation for:', searchTerm, 'userId:', user.uid);
+      
+      const newPlant = await createNewPlant(searchTerm, user.uid);
       console.log('Plant generated:', newPlant);
       
       setStatus('saving');
       const location = await getCurrentLocation();
       console.log('Got location:', location);
-      
-      if (!user?.uid) {
-        throw new Error('User not logged in');
-      }
       
       if (!location) {
         throw new Error('Could not get location');
@@ -96,6 +105,7 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
     } catch (error) {
       console.error('Error in handleAddPlant:', error);
       setError('Failed to add plant. Please try again.');
+    } finally {
       setStatus('idle');
     }
   };
@@ -134,6 +144,16 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
     }
   }, [isVisible]);
 
+  useEffect(() => {
+    if (status === 'generating') {
+      // Start playing the video when generating starts
+      videoRef.current?.playAsync();
+    } else {
+      // Pause the video when not generating
+      videoRef.current?.pauseAsync();
+    }
+  }, [status]);
+
   const handleClose = () => {
     // Run close animations first, then call onClose
     Animated.parallel([
@@ -151,6 +171,25 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
       onClose();
     });
   };
+
+  const LoadingOverlay = () => (
+    <View style={styles.loadingOverlay}>
+      <Video
+        ref={videoRef}
+        source={require('@/assets/images/plant-animation.webm')}
+        style={styles.loadingAnimation}
+        resizeMode="contain"
+        isLooping
+        shouldPlay={status === 'generating'}
+        onLoad={() => setIsVideoReady(true)}
+      />
+      <Text style={styles.statusText}>
+        {status === 'checking' && 'Verifying plant name...'}
+        {status === 'generating' && 'Generating plant profile...'}
+        {status === 'saving' && 'Saving plant...'}
+      </Text>
+    </View>
+  );
 
   return (
     <Modal
@@ -206,16 +245,7 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
               <Text style={styles.errorText}>{error}</Text>
             )}
 
-            {status !== 'idle' && (
-              <View style={styles.statusContainer}>
-                <ActivityIndicator color="#d6844b" />
-                <Text style={styles.statusText}>
-                  {status === 'checking' && 'Verifying plant name...'}
-                  {status === 'generating' && 'Generating plant profile...'}
-                  {status === 'saving' && 'Saving plant...'}
-                </Text>
-              </View>
-            )}
+            {status !== 'idle' && <LoadingOverlay />}
 
             <ScrollView 
               style={styles.scrollView}
@@ -285,7 +315,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalView: {
-    backgroundColor: 'white',
+    backgroundColor: '#f2eee4',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: '#000',
@@ -343,8 +373,8 @@ const styles = StyleSheet.create({
   },
   addNewButton: {
     padding: 16,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 999,
     marginTop: 16,
     marginBottom: 8,
     borderWidth: 1,
@@ -363,7 +393,7 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     backgroundColor: '#d6844b',
-    borderRadius: 12,
+    borderRadius: 999,
     padding: 12,
     alignItems: 'center',
   },
@@ -393,5 +423,28 @@ const styles = StyleSheet.create({
   },
   resultsContainer: {
     paddingTop: 8,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(242, 238, 228, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingAnimation: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  statusText: {
+    fontSize: 16,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#d6844b',
+    textAlign: 'center',
+    marginTop: 16,
   },
 }); 

@@ -114,6 +114,7 @@ export default function TabLayout() {
           tabBarIconStyle: {
             marginBottom: 8,
           },
+          tabBarShowLabel: false,
         }}>
         <Tabs.Screen
           name="index"
@@ -121,12 +122,14 @@ export default function TabLayout() {
             title: 'Calendar',
             tabBarIcon: ({ color }) => <TabBarIcon name="calendar" color={color} />,
             tabBarLabel: 'Calendar',
+            headerTitleAlign: 'left',
             headerTitle: ({ children }) => (
               <TouchableOpacity 
                 onPress={() => {
                   console.log('Calendar title pressed');
                   eventEmitter.emit('resetCalendar');
                 }}
+                style={styles.headerTitleContainer}
               >
                 <Text style={styles.headerTitle}>{children}</Text>
               </TouchableOpacity>
@@ -192,5 +195,9 @@ const styles = StyleSheet.create({
     fontFamily: 'PoppinsSemiBold',
     fontSize: 20,
     color: '#5a6736',
+  },
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
