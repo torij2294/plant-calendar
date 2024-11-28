@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, SectionList, Alert } from 'react-native';
+import { StyleSheet, View, SectionList, Alert, SectionListRenderItem } from 'react-native';
 import { Text } from '@/components/Themed';
 import { PlantTile } from '@/components/plants/PlantTile';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useRouter } from 'expo-router';
+import { PlantData } from '@/types/plants';
 
 export default function TabTwoScreen() {
   const { user } = useAuth();
@@ -14,6 +15,7 @@ export default function TabTwoScreen() {
     { title: 'Plants to Plant', data: [] },
     { title: 'Archive', data: [] }
   ]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchUserPlants();
@@ -61,8 +63,9 @@ export default function TabTwoScreen() {
     }
   };
 
-  const renderPlantTile = ({ item, section }) => (
+  const renderPlantTile: SectionListRenderItem<PlantData> = ({ item }) => (
     <PlantTile
+      key={`plant-${item.id}-${Date.now()}`}
       plant={item.plant}
       onPress={() => router.push(`/plant/${item.id}`)}
       plantingDate={new Date(item.plantingDate).toLocaleDateString('en-US', {
@@ -86,6 +89,8 @@ export default function TabTwoScreen() {
         keyExtractor={(item) => item.id}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={styles.listContent}
+        removeClippedSubviews={false}
+        initialNumToRender={20}
       />
     </View>
   );

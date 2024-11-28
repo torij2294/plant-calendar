@@ -241,10 +241,10 @@ export default function PlantCalendarView() {
       />
       <View style={[
         styles.agendaContainer,
-        { marginTop: monthRows === 5 ? -40 : 0 }
+        { marginTop: -20 }
       ]}>
         <PlantAgendaList 
-          key={currentMonth} // Add this to force refresh
+          key={currentMonth}
           selectedDate={selectedDate} 
           currentMonth={currentMonth}
         />
@@ -259,12 +259,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   calendar: {
-    borderWidth: 0,
-    borderRadius: 10,
+    marginBottom: -20,
   },
   agendaContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    minHeight: 300,
   },
   dayContainer: {
     width: 32,

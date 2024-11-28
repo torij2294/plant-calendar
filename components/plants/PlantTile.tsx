@@ -13,6 +13,7 @@ interface PlantTileProps {
   plant: Plant;
   onPress: (plant: Plant) => void;
   plantingDate?: string;
+  index?: number;
 }
 
 export function PlantTile({ plant, onPress, plantingDate }: PlantTileProps) {
@@ -38,34 +39,6 @@ export function PlantTile({ plant, onPress, plantingDate }: PlantTileProps) {
   const handleImageError = () => {
     console.error('Failed to load image:', plant.imageUrl);
     setImageSource(defaultPlantImage);
-  };
-
-  const handleAddPlant = async () => {
-    if (!user) {
-      Alert.alert('Error', 'You must be logged in to add plants');
-      return;
-    }
-
-    try {
-      // Get user's location
-      const location = await getCurrentLocation();
-      if (!location) {
-        Alert.alert('Error', 'Unable to get your location');
-        return;
-      }
-
-      const result = await handlePlantSelection(plant, user.uid, location);
-      
-      if (result.success) {
-        Alert.alert(
-          'Success', 
-          `${plant.displayName} has been added to your garden! Planting date: ${result.plantingDate}`
-        );
-      }
-    } catch (error) {
-      console.error('Error adding plant:', error);
-      Alert.alert('Error', 'Failed to add plant to your garden');
-    }
   };
 
   return (
@@ -165,5 +138,9 @@ const styles = StyleSheet.create({
     fontFamily: 'PoppinsSemiBold',
     color: '#d6844b',
     marginTop: 4,
+  },
+  touchable: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 }); 

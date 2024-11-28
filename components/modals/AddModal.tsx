@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { createNewPlant, searchExistingPlants } from '@/services/plantService';
 import { Plant } from '@/types/plants';
@@ -61,19 +62,40 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
 
   // Handle adding a new plant
   const handleAddPlant = async () => {
-    if (!searchTerm.trim() || !user) return;
-    
-    setStatus('checking');
-    setError(null);
+    if (!searchTerm.trim()) return;
     
     try {
       setStatus('generating');
-      const newPlant = await createNewPlant(searchTerm.trim(), user.uid);
+      console.log('Starting plant generation for:', searchTerm);
+      
+      const newPlant = await createNewPlant(searchTerm);
+      console.log('Plant generated:', newPlant);
       
       setStatus('saving');
-      onClose();
-    } catch (error: any) {
-      setError(error.message);
+      const location = await getCurrentLocation();
+      console.log('Got location:', location);
+      
+      if (!user?.uid) {
+        throw new Error('User not logged in');
+      }
+      
+      if (!location) {
+        throw new Error('Could not get location');
+      }
+      
+      const result = await handlePlantSelection(newPlant, user.uid, location);
+      console.log('Plant selection result:', result);
+      
+      if (result.success) {
+        Alert.alert(
+          'Success', 
+          `${newPlant.displayName} has been added to your garden! Planting date: ${result.plantingDate}`,
+          [{ text: 'OK', onPress: () => onClose() }]
+        );
+      }
+    } catch (error) {
+      console.error('Error in handleAddPlant:', error);
+      setError('Failed to add plant. Please try again.');
       setStatus('idle');
     }
   };

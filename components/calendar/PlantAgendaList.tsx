@@ -104,6 +104,16 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
     return name;
   }, [currentMonth]);
 
+  if (!monthEvents || monthEvents.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.noEventsText}>
+          No plants to plant this month
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {monthEvents.length > 0 ? (
@@ -193,7 +203,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#666666',
     fontFamily: 'Poppins',
-    marginTop: 20,
+    fontSize: 16,
   },
   detailsContainer: {
     flexDirection: 'row',
@@ -210,5 +220,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins',
     color: '#666666',
     marginHorizontal: 4,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 300,
   },
 }); 
