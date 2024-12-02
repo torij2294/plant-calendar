@@ -13,6 +13,8 @@ interface CalendarEventItemProps {
 }
 
 export function CalendarEventItem({ event }: CalendarEventItemProps) {
+  const displayDate = format(parseISO(event.date), 'MMMM do, yyyy');
+  
   return (
     <View style={styles.container}>
       <PlantTile 

@@ -3,6 +3,7 @@ import { Plant } from '@/types/plants';
 import { httpsCallable } from 'firebase/functions';
 import { doc, setDoc, collection } from 'firebase/firestore';
 import { getDownloadURL, ref } from 'firebase/storage';
+import { eventEmitter } from '@/services/eventEmitter';
 
 const getPlantingDateFunction = httpsCallable(functions, 'getPlantingDate');
 
@@ -55,6 +56,8 @@ export async function handlePlantSelection(
     });
 
     console.log('Added to calendar collection');
+
+    eventEmitter.emit('plantAdded');
 
     return {
       success: true,

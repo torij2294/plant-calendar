@@ -13,6 +13,7 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Keyboard,
 } from 'react-native';
 import { createNewPlant, searchExistingPlants } from '@/services/plantService';
 import { Plant } from '@/types/plants';
@@ -23,6 +24,9 @@ import { getCurrentLocation, type LocationData } from '@/services/location';
 import { handlePlantSelection } from '@/services/userPlantsService';
 import { Video } from 'expo-av';
 import { Asset } from 'expo-asset';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/config/firebase';
+import LottieView from 'lottie-react-native';
 
 interface AddModalProps {
   isVisible: boolean;
@@ -70,18 +74,22 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
   const handleAddPlant = async () => {
     if (!searchTerm.trim()) return;
     
+    // Dismiss keyboard
+    Keyboard.dismiss();
+    
     try {
       if (!user?.uid) {
         throw new Error('User not logged in');
       }
       
       setStatus('checking');
-      console.log('Checking plant name:', searchTerm);
+      const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+      console.log('Checking plant name:', normalizedSearchTerm);
       
       setStatus('generating');
-      console.log('Starting plant generation for:', searchTerm, 'userId:', user.uid);
+      console.log('Starting plant generation for:', normalizedSearchTerm, 'userId:', user.uid);
       
-      const newPlant = await createNewPlant(searchTerm, user.uid);
+      const newPlant = await createNewPlant(normalizedSearchTerm, user.uid);
       console.log('Plant generated:', newPlant);
       
       setStatus('saving');
@@ -99,7 +107,7 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
         Alert.alert(
           'Success', 
           `${newPlant.displayName} has been added to your garden! Planting date: ${result.plantingDate}`,
-          [{ text: 'OK', onPress: () => onClose() }]
+          [{ text: 'OK', onPress: () => handleClose() }]
         );
       }
     } catch (error) {
@@ -154,42 +162,82 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
     }
   }, [status]);
 
+  const resetModalState = () => {
+    setSearchTerm('');
+    setSearchResults([]);
+    setIsSearching(false);
+    setStatus('idle');
+    setError(null);
+  };
+
   const handleClose = () => {
-    // Run close animations first, then call onClose
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 600,
-        duration: 250,
-        useNativeDriver: true,
-      })
-    ]).start(() => {
-      onClose();
-    });
+    resetModalState();
+    onClose();
   };
 
   const LoadingOverlay = () => (
     <View style={styles.loadingOverlay}>
-      <Video
-        ref={videoRef}
-        source={require('@/assets/images/plant-animation.webm')}
+      <LottieView
+        source={require('@/assets/animations/loading-animation.json')}
         style={styles.loadingAnimation}
-        resizeMode="contain"
-        isLooping
-        shouldPlay={status === 'generating'}
-        onLoad={() => setIsVideoReady(true)}
+        autoPlay
+        loop
+        speed={0.7}
+        renderMode="HARDWARE"
       />
       <Text style={styles.statusText}>
         {status === 'checking' && 'Verifying plant name...'}
-        {status === 'generating' && 'Generating plant profile. This may take a moment...'}
+        {status === 'generating' && 'Generating plant profile. This may take a minute...'}
         {status === 'saving' && 'Saving plant...'}
       </Text>
     </View>
   );
+
+  const handleExistingPlantSelection = async (selectedPlant: Plant) => {
+    if (!user?.uid) {
+      throw new Error('User not logged in');
+    }
+    
+    try {
+      setStatus('checking');
+      
+      // Check if plant already exists in user's calendar
+      const calendarRef = collection(db, 'userProfiles', user.uid, 'calendar');
+      const q = query(calendarRef, where('plantId', '==', selectedPlant.id));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        Alert.alert(
+          'Already Added',
+          'This plant is already in your garden!',
+          [{ text: 'OK', onPress: () => onClose() }]
+        );
+        return;
+      }
+      
+      setStatus('saving');
+      const location = await getCurrentLocation();
+      
+      if (!location) {
+        throw new Error('Could not get location');
+      }
+      
+      const result = await handlePlantSelection(selectedPlant, user.uid, location);
+      
+      if (result.success) {
+        Alert.alert(
+          'Success', 
+          `${selectedPlant.displayName} has been added to your garden! Planting date: ${result.plantingDate}`,
+          [{ text: 'OK', onPress: () => onClose() }]
+        );
+      }
+    } catch (error) {
+      console.error('Error adding existing plant:', error);
+      setError('Failed to add plant. Please try again.');
+    } finally {
+      setStatus('idle');
+    }
+  };
 
   return (
     <Modal
@@ -262,10 +310,7 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
                     <PlantTile
                       key={plant.id}
                       plant={plant}
-                      onPress={(selectedPlant) => {
-                        // Handle selecting existing plant
-                        console.log('Selected plant:', selectedPlant.displayName);
-                      }}
+                      onPress={() => handleExistingPlantSelection(plant)}
                     />
                   ))}
                 </View>
@@ -305,6 +350,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   overlayTouch: {
@@ -421,7 +468,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontFamily: 'Poppins',
     fontSize: 14,
-    color: '#666',
+    color: '#694449',
   },
   resultsContainer: {
     paddingTop: 8,
@@ -432,7 +479,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(242, 238, 228, 0.9)',
+    backgroundColor: 'rgba(245, 238, 240, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
@@ -440,12 +487,11 @@ const styles = StyleSheet.create({
   loadingAnimation: {
     width: 200,
     height: 200,
-    marginBottom: 20,
   },
   statusText: {
     fontSize: 16,
     fontFamily: 'PoppinsSemiBold',
-    color: '#d6844b',
+    color: '694449',
     textAlign: 'center',
     marginTop: 16,
   },

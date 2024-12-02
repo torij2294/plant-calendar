@@ -7,12 +7,12 @@ import { eventEmitter } from '@/services/eventEmitter';
 import { collection, query, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { parseISO, format, isSameDay } from 'date-fns';
 
 export default function PlantCalendarView() {
   const { user } = useAuth();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().split('T')[0]);
-  const [monthRows, setMonthRows] = useState(6);
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'yyyy-MM-dd'));
   const calendarRef = useRef(null);
   const [events, setEvents] = useState<any[]>([]);
 
@@ -62,9 +62,14 @@ export default function PlantCalendarView() {
     };
 
     fetchEvents();
-  }, [user?.uid]);
 
-  const calendarHeight = monthRows === 5 ? 300 : 340;
+    // Add listener for new plants
+    const unsubscribe = eventEmitter.on('plantAdded', fetchEvents);
+
+    return () => {
+      eventEmitter.off('plantAdded', unsubscribe);
+    };
+  }, [user?.uid]);
 
   const getMarkedDates = () => {
     const marked = {};
@@ -142,29 +147,25 @@ export default function PlantCalendarView() {
         onDayPress={(day) => setSelectedDate(day.dateString)}
         markedDates={getMarkedDates()}
         onMonthChange={(month) => {
-          // Use the timestamp from the month object
           console.log('Month changed:', month);
-          const newDate = new Date(month.timestamp);
-          const formattedMonth = newDate.toISOString().split('T')[0];
+          const formattedMonth = format(new Date(month.timestamp), 'yyyy-MM-dd');
           console.log('Setting month to:', formattedMonth);
           setCurrentMonth(formattedMonth);
-
-          // Calculate rows
-          const firstDay = newDate.getDay();
-          const daysInMonth = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0).getDate();
-          const rows = Math.ceil((firstDay + daysInMonth) / 7);
-          setMonthRows(rows);
+        }}
+        onVisibleMonthsChange={months => {
+          if (months[0]) {
+            setCurrentMonth(months[0].dateString);
+          }
         }}
         horizontal={true}
         pagingEnabled={true}
-        calendarHeight={calendarHeight}
+        style={styles.calendar}
+        hideArrows={true}
+        hideExtraDays={true}
         pastScrollRange={12}
         futureScrollRange={12}
         scrollEnabled={true}
         showScrollIndicator={false}
-        style={styles.calendar}
-        hideExtraDays={false}
-        firstDay={1}
         theme={{
           calendarBackground: '#f5eef0',
           monthTextColor: '#694449',
@@ -180,7 +181,7 @@ export default function PlantCalendarView() {
               justifyContent: 'flex-start',
               paddingLeft: 4,
               marginBottom: 0,
-              marginTop: 10,
+              marginTop: 0,
             },
             dayHeader: {
               width: 32,
@@ -234,6 +235,7 @@ export default function PlantCalendarView() {
           );
         }}
         dayNamesShort={['M', 'T', 'W', 'T', 'F', 'S', 'S']}
+        staticHeader={true}
       />
       <View style={[
         styles.agendaContainer,
@@ -252,17 +254,25 @@ export default function PlantCalendarView() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5eef0',
   },
   calendar: {
-    marginBottom: -20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    backgroundColor: '#f5eef0',
+    marginBottom: 4,
   },
   agendaContainer: {
     flex: 1,
   },
   dayContainer: {
-    width: 36,
-    height: 36,
+    width: 30,
+    height: 30,
     justifyContent: 'center',
     alignItems: 'center',
     margin: 4,

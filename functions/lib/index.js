@@ -44,8 +44,8 @@ exports.getPlantProfile = functions.https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "User must be authenticated");
     }
-    const { plantName } = data;
-    if (!plantName || typeof plantName !== "string") {
+    const plantName = data.plantName.trim().toLowerCase();
+    if (!plantName) {
         throw new functions.https.HttpsError("invalid-argument", "Plant name must be provided");
     }
     try {

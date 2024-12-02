@@ -29,8 +29,8 @@ export const getPlantProfile = functions.https.onCall(async (data, context) => {
     );
   }
 
-  const {plantName} = data;
-  if (!plantName || typeof plantName !== "string") {
+  const plantName = data.plantName.trim().toLowerCase();
+  if (!plantName) {
     throw new functions.https.HttpsError(
       "invalid-argument",
       "Plant name must be provided"

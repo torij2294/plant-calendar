@@ -7,6 +7,7 @@ import { collection, query, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useRouter } from 'expo-router';
 import { PlantData } from '@/types/plants';
+import { eventEmitter } from '@/services/eventEmitter';
 
 export default function TabTwoScreen() {
   const { user } = useAuth();
@@ -19,6 +20,13 @@ export default function TabTwoScreen() {
 
   useEffect(() => {
     fetchUserPlants();
+    
+    // Add listener for new plants
+    const unsubscribe = eventEmitter.on('plantAdded', fetchUserPlants);
+
+    return () => {
+      eventEmitter.off('plantAdded', unsubscribe);
+    };
   }, [user?.uid]);
 
   const fetchUserPlants = async () => {

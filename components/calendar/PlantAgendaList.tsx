@@ -5,7 +5,7 @@ import { Plant } from '@/types/plants';
 import { db } from '@/config/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
-import { parseISO } from 'date-fns';
+import { parseISO, startOfMonth, endOfMonth, isSameMonth, isSameYear, startOfDay, isSameDay, format } from 'date-fns';
 
 type PlantEvent = {
   id: string;
@@ -14,23 +14,20 @@ type PlantEvent = {
   date: string;
 }
 
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    year: 'numeric' 
-  });
-}
-
 interface PlantAgendaListProps {
   selectedDate: string;
   currentMonth: string;
+  style?: any;
 }
 
-export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListProps) {
+export function PlantAgendaList({ selectedDate, currentMonth, style }: PlantAgendaListProps) {
   const [monthEvents, setMonthEvents] = useState<any[]>([]);
   const { user } = useAuth();
+
+  // Memoize the date parsing to avoid recalculation
+  const parsedDate = useMemo(() => parseISO(currentMonth), [currentMonth]);
+  const currentMonthNum = parsedDate.getMonth();
+  const currentYear = parsedDate.getFullYear();
 
   useEffect(() => {
     console.log('PlantAgendaList received new month:', currentMonth);
@@ -54,7 +51,7 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
         const q = query(userPlantsRef);
         const querySnapshot = await getDocs(q);
         
-        // Log raw data
+        // Log raw data for debugging
         console.log('2. Raw calendar data:', querySnapshot.docs.map(doc => ({
           id: doc.id,
           data: doc.data()
@@ -93,7 +90,7 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
       } catch (error) {
         console.error('Error fetching month events:', error);
       }
-    };
+    }
 
     fetchMonthEvents();
   }, [currentMonth, user?.uid]);
@@ -117,49 +114,37 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
   }
 
   return (
-    <View style={styles.container}>
-      {monthEvents.length > 0 ? (
-        <FlatList
-          data={monthEvents}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={[
-              styles.eventItem,
-              new Date(item.date).toISOString().split('T')[0] === selectedDate && styles.selectedEvent
-            ]}>
-              <Image
-                source={{ uri: item.plant.imageUrl }}
-                style={styles.plantImage}
-                defaultSource={require('@/assets/images/plant-calendar-logo.png')}
-              />
-              <View style={styles.eventContent}>
-                <Text style={styles.plantName}>{item.plant.displayName}</Text>
-                <Text style={styles.dateText}>
-                  Plant on: {new Date(item.date).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </Text>
-                <View style={styles.detailsContainer}>
-                  <Text style={styles.detailText}>{item.plant.sunPreference}</Text>
-                  <Text style={styles.bulletPoint}> • </Text>
-                  <Text style={styles.detailText}>{item.plant.wateringPreference}</Text>
-                </View>
+    <View style={[styles.container, style]}>
+      <FlatList
+        data={monthEvents}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={[
+            styles.eventItem,
+            isSameDay(parseISO(item.date), parseISO(selectedDate)) && styles.selectedEvent
+          ]}>
+            <Image
+              source={{ uri: item.plant.imageUrl }}
+              style={styles.plantImage}
+              defaultSource={require('@/assets/images/plant-calendar-logo.png')}
+            />
+            <View style={styles.eventContent}>
+              <Text style={styles.plantName}>{item.plant.displayName}</Text>
+              <Text style={styles.dateText}>
+                Plant on: {format(parseISO(item.date), 'MMMM do, yyyy')}
+              </Text>
+              <View style={styles.detailsContainer}>
+                <Text style={styles.detailText}>{item.plant.sunPreference}</Text>
+                <Text style={styles.bulletPoint}> • </Text>
+                <Text style={styles.detailText}>{item.plant.wateringPreference}</Text>
               </View>
             </View>
-          )}
-          style={styles.list}
-          contentContainerStyle={{ 
-            paddingBottom: 100,  // Add more padding for tab bar
-          }}
-          showsVerticalScrollIndicator={true}
-          scrollEnabled={true}
-          nestedScrollEnabled={true}  // Add this
-        />
-      ) : (
-        <Text style={styles.noEventsText}>No plants to plant this month</Text>
-      )}
+          </View>
+        )}
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={true}
+      />
     </View>
   );
 }
@@ -168,24 +153,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5eef0',
-    padding: 16,
   },
   list: {
     flex: 1,
+  },
+  listContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 100,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 85,
   },
   eventItem: {
     flexDirection: 'row',
     padding: 6,
     marginBottom: 8,
-    backgroundColor: '#f5eef0',
+    backgroundColor: '#f4dbde',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#694449',
+    borderColor: '#ddc6c9',
     alignItems: 'center',
   },
   selectedEvent: {
     backgroundColor: '#f4dbde',
-    borderColor: '#ddc6c9',
+    borderColor: '#694449',
     borderWidth: 1,
   },
   plantImage: {
@@ -206,7 +201,7 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 14,
     fontFamily: 'Poppins',
-    color: '#ed9aa4',
+    color: '#c23a4a',
     marginBottom: 2
   },
   noEventsText: {
@@ -230,10 +225,5 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins',
     color: '#666666',
     marginHorizontal: 4,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 }); 

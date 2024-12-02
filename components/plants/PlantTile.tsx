@@ -72,7 +72,7 @@ export function PlantTile({ plant, onPress, plantingDate }: PlantTileProps) {
         </View>
         {plantingDate && (
           <Text style={styles.dateText}>
-            Plant on: {format(parseISO(plantingDate), 'MMMM d, yyyy')}
+            Plant on: {format(parseISO(plantingDate), 'MMMM do, yyyy')}
           </Text>
         )}
       </View>
