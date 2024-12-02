@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { Text } from '@/components/Themed';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather, FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import React, { useEffect, useState } from 'react';
 import { doc, getDoc, deleteDoc } from 'firebase/firestore';
@@ -80,7 +80,7 @@ export default function PlantProfileScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color="#5a6736" />
+          <FontAwesome name="arrow-left" size={24} color="#694449" />
         </TouchableOpacity>
       </View>
 
@@ -137,7 +137,7 @@ export default function PlantProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2eee4',
+    backgroundColor: '#ddc6c9',
   },
   header: {
     flexDirection: 'row',
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 20,
-    backgroundColor: '#f2eee4',
+    backgroundColor: '#ddc6c9',
   },
   backButton: {
     padding: 8,
@@ -172,9 +172,9 @@ const styles = StyleSheet.create({
   },
   plantName: {
     fontSize: 24,
-    fontFamily: 'PoppinsSemiBold',
-    color: '#5a6736',
-    marginBottom: 8,
+    fontFamily: 'PoppinsBold',
+    color: '#694449',
+    marginBottom: 4,
   },
   plantingDate: {
     fontSize: 16,
@@ -184,7 +184,8 @@ const styles = StyleSheet.create({
   careSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 32,
+    marginBottom: 24,
+    marginHorizontal: 12,
   },
   careCard: {
     flex: 1,
@@ -232,14 +233,14 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: '#fff',
-    marginTop: 32,
+    marginTop: 16,
     marginHorizontal: 16,
     marginBottom: 32,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#ff4444',
+    borderColor: '#c23a4a',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -250,7 +251,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   deleteButtonText: {
-    color: '#ff4444',
+    color: '#c23a4a',
     fontSize: 16,
     fontFamily: 'PoppinsSemiBold',
   },

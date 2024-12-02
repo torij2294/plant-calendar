@@ -3,7 +3,7 @@ export const typography = {
     fontFamily: 'Poppins',
   },
   tabBar: {
-    fontFamily: 'PoppinsMedium',
+    fontFamily: 'PoppinsSemiBold',
     fontSize: 12,
   },
   calendar: {
@@ -11,9 +11,9 @@ export const typography = {
       fontFamily: 'Poppins',
       fontSize: 16,
     },
-    monthText: {
-      fontFamily: 'PoppinsSemiBold',
-      fontSize: 18,
+    monthText: { 
+      fontFamily: 'PoppinsMedium', // CALENDAR MONTH TEXT
+      fontSize: 20,
     },
     dayHeader: {
       fontFamily: 'PoppinsMedium',
@@ -21,7 +21,7 @@ export const typography = {
     },
     sectionTitle: {
       fontFamily: 'PoppinsMedium',
-      fontSize: 14,
+      fontSize: 20,
     },
     today: {
       fontFamily: 'PoppinsMedium',

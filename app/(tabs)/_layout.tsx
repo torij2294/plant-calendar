@@ -1,7 +1,8 @@
 import { eventEmitter } from '@/services/eventEmitter';
+import { Feather } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 
 import React, { useState, useEffect } from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { typography } from '@/theme/typography';
@@ -67,14 +68,18 @@ export default function TabLayout() {
     <>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: '#d6844b',
-          tabBarInactiveTintColor: '#c4cb89',
+          tabBarActiveTintColor: '#ed9aa4',
+          tabBarInactiveTintColor: '#f4dbde',
           headerShown: true,
           tabBarLabelStyle: typography.tabBar,
+          headerStyle: {
+            backgroundColor: '#f5eef0',
+          },
+          headerShadowVisible: false,
           headerTitleStyle: {
             fontFamily: 'PoppinsSemiBold',
             fontSize: 20,
-            color: '#5a6736',
+            color: '#ddc6c9',
           },
           headerTitleAlign: 'center',
           headerRight: () => (
@@ -108,11 +113,13 @@ export default function TabLayout() {
             bottom: 0,
             left: 0,
             right: 0,
-            backgroundColor: '#fff',
+            backgroundColor: '#f5eef0',
             borderTopWidth: 0,
           },
           tabBarIconStyle: {
             marginBottom: 8,
+            width: 32,
+            height: 32,
           },
           tabBarShowLabel: false,
         }}>
@@ -120,9 +127,11 @@ export default function TabLayout() {
           name="index"
           options={{
             title: 'Calendar',
-            tabBarIcon: ({ color }) => <TabBarIcon name="calendar" color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Feather name="calendar" size={32} color={color} />
+            ),
             tabBarLabel: 'Calendar',
-            headerTitleAlign: 'left',
+            headerTitleAlign: 'center',
             headerTitle: ({ children }) => (
               <TouchableOpacity 
                 onPress={() => {
@@ -150,10 +159,10 @@ export default function TabLayout() {
               >
                 <View
                   style={{
-                    width: 56,
-                    height: 56,
+                    width: 52,
+                    height: 52,
                     borderRadius: 28,
-                    backgroundColor: '#d6844b',
+                    backgroundColor: '#694449',
                     justifyContent: 'center',
                     alignItems: 'center',
                     shadowColor: "#000",
@@ -176,8 +185,14 @@ export default function TabLayout() {
           name="two"
           options={{
             title: 'Plants',
-            tabBarIcon: ({ color }) => <TabBarIcon name="pagelines" color={color} />,
+            tabBarIcon: ({ color }) => (
+              <FontAwesome name="leaf" size={32} color={color} />
+            ),
             tabBarLabel: 'Plants',
+            headerTitleAlign: 'center',
+            headerTitle: ({ children }) => (
+              <Text style={styles.headerTitle}>{children}</Text>
+            ),
           }}
         />
       </Tabs>
@@ -192,9 +207,9 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   headerTitle: {
-    fontFamily: 'PoppinsSemiBold',
-    fontSize: 20,
-    color: '#5a6736',
+    fontFamily: 'PoppinsBold',
+    fontSize: 24, 
+    color: '#694449', //"CALENDAR" TITLE TEXT COLOR
   },
   headerTitleContainer: {
     flexDirection: 'row',

@@ -12,8 +12,8 @@ export default function TabTwoScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const [sections, setSections] = useState([
-    { title: 'Plants to Plant', data: [] },
-    { title: 'Archive', data: [] }
+    { title: 'To Plant', data: [] },
+    { title: 'Planted', data: [] }
   ]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,7 +35,7 @@ export default function TabTwoScreen() {
 
       querySnapshot.docs.forEach(doc => {
         const data = doc.data();
-        const plantDate = new Date(data.date);
+        const plantDate = new Date(data.date + 'T00:00:00.000Z');
         const plantItem = {
           id: doc.id,
           ...data,
@@ -50,7 +50,10 @@ export default function TabTwoScreen() {
       });
 
       // Sort by planting date
-      const sortByDate = (a, b) => new Date(a.plantingDate) - new Date(b.plantingDate);
+      const sortByDate = (a, b) => 
+        new Date(a.plantingDate + 'T00:00:00.000Z').getTime() - 
+        new Date(b.plantingDate + 'T00:00:00.000Z').getTime();
+      
       currentPlants.sort(sortByDate);
       archivedPlants.sort(sortByDate);
 
@@ -68,11 +71,7 @@ export default function TabTwoScreen() {
       key={`plant-${item.id}-${Date.now()}`}
       plant={item.plant}
       onPress={() => router.push(`/plant/${item.id}`)}
-      plantingDate={new Date(item.plantingDate).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      })}
+      plantingDate={item.plantingDate}
     />
   );
 
@@ -99,23 +98,23 @@ export default function TabTwoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#faf7ef',
+    backgroundColor: '#f5eef0',
   },
   listContent: {
     padding: 16,
   },
   sectionHeader: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f5eef0',
     paddingVertical: 12,
     marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontFamily: 'PoppinsSemiBold',
-    color: '#5a6736',
+    color: '#694449',
   },
   deleteContainer: {
-    backgroundColor: '#ff4444',
+    backgroundColor: '#f5eef0',
     justifyContent: 'center',
     alignItems: 'center',
     width: 80,

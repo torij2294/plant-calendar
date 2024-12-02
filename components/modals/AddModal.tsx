@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalView: {
-    backgroundColor: '#f2eee4',
+    backgroundColor: '#f5eef0',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: '#000',
@@ -337,13 +337,15 @@ const styles = StyleSheet.create({
   modalText: {
     fontSize: 20,
     fontFamily: 'PoppinsSemiBold',
+    color: '#694449',
   },
   searchInput: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    borderColor: '#ddc6c9',
+    borderRadius: 12,
     padding: 12,
-    margin: 24,
+    marginVertical: 12,
+    marginHorizontal: 24,
     fontSize: 16,
     fontFamily: 'Poppins',
   },
@@ -378,12 +380,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#d6844b',
+    borderColor: '#694449',
   },
   addNewText: {
     fontSize: 16,
     fontFamily: 'Poppins',
-    color: '#d6844b',
+    color: '#694449',
     textAlign: 'center',
   },
   modalFooter: {
@@ -392,7 +394,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#eee',
   },
   closeButton: {
-    backgroundColor: '#d6844b',
+    backgroundColor: '#694449',
     borderRadius: 999,
     padding: 12,
     alignItems: 'center',

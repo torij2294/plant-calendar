@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Alert } from 'react-native';
 import { getCurrentLocation, type LocationData } from '@/services/location';
 import { useRouter } from 'expo-router';
+import { parseISO, format } from 'date-fns';
 
 const defaultPlantImage = require('@/assets/images/plant-calendar-logo.png');
 
@@ -71,21 +72,24 @@ export function PlantTile({ plant, onPress, plantingDate }: PlantTileProps) {
         </View>
         {plantingDate && (
           <Text style={styles.dateText}>
-            Plant on: {plantingDate}
+            Plant on: {format(parseISO(plantingDate), 'MMMM d, yyyy')}
           </Text>
         )}
       </View>
     </TouchableOpacity>
   );
 }
-
+//These styles are for the plant tile in the plant tab. The styles for the agenda list are in PlantAgendaList.tsx
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     padding: 12,
-    backgroundColor: '#f2eee4',
+    backgroundColor: 'f5eef0',
     borderRadius: 12,
     marginBottom: 8,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#ddc6c9',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
@@ -99,7 +103,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: 80,
     height: 80,
-    borderRadius: 8,
+    borderRadius: 40,
     overflow: 'hidden',
     backgroundColor: '#f5f5f5',
   },
@@ -115,8 +119,8 @@ const styles = StyleSheet.create({
   },
   plantName: {
     fontSize: 16,
-    fontFamily: 'PoppinsSemiBold',
-    color: '#2c2c2c',
+    fontFamily: 'PoppinsBold',
+    color: '#694449',
     marginBottom: 4,
   },
   detailsContainer: {
@@ -136,8 +140,8 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 14,
     fontFamily: 'PoppinsSemiBold',
-    color: '#d6844b',
-    marginTop: 4,
+    color: '#ed9aa4',
+    marginTop: 0,
   },
   touchable: {
     flexDirection: 'row',

@@ -1,7 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { 
+import {
   Poppins_400Regular,
   Poppins_500Medium,
   Poppins_600SemiBold,
@@ -27,17 +27,17 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   console.log('RootLayout rendering');
   const [loaded, error] = useFonts({
-    Poppins_400Regular,
-    Poppins_500Medium,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
+    'Poppins': Poppins_400Regular,
+    'PoppinsMedium': Poppins_500Medium,
+    'PoppinsSemiBold': Poppins_600SemiBold,
+    'PoppinsBold': Poppins_700Bold,
     ...FontAwesome.font,
   });
 
   useEffect(() => {
     console.log('Font loading status:', loaded);
     console.log('Font loading error:', error);
-    
+
     if (loaded) {
       SplashScreen.hideAsync().catch(console.error);
     }
@@ -63,7 +63,7 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { user, loading } = useAuth();
-  
+
   console.log('RootLayoutNav - Auth state:', { user, loading });
 
   if (loading) {

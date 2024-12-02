@@ -301,20 +301,18 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5eef0',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   headerTitle: {
     fontSize: 20,
-    fontFamily: 'PoppinsSemiBold',
-    color: '#5a6736',
+    fontFamily: 'PoppinsBold',
+    color: '#694449',
   },
   backButton: {
     padding: 8,
@@ -323,7 +321,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   editButtonText: {
-    color: '#d6844b',
+    color: '#694449',
     fontFamily: 'PoppinsSemiBold',
     fontSize: 16,
   },
@@ -391,8 +389,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    backgroundColor: '#fff',
+    borderTopColor: '#f5eef0',
+    backgroundColor: '#f5eef0',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -408,11 +406,11 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#d6844b',
+    borderColor: '#694449',
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#d6844b',
+    color: '#694449',
     fontFamily: 'PoppinsSemiBold',
     fontSize: 16,
   },
@@ -421,7 +419,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginLeft: 8,
     borderRadius: 8,
-    backgroundColor: '#d6844b',
+    backgroundColor: '#694449',
     alignItems: 'center',
   },
   saveButtonText: {
@@ -433,14 +431,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   locationButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#ddc6c9',
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
     alignItems: 'center',
   },
   locationButtonText: {
-    color: '#5a6736',
+    color: '#694449',
     fontFamily: 'PoppinsSemiBold',
   },
   locationInfo: {

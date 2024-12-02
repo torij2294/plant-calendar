@@ -5,6 +5,7 @@ import { Plant } from '@/types/plants';
 import { db } from '@/config/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
+import { parseISO } from 'date-fns';
 
 type PlantEvent = {
   id: string;
@@ -38,11 +39,14 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
       if (!user?.uid) return;
 
       try {
-        const date = new Date(currentMonth);
+        const date = parseISO(currentMonth);
+        const currentMonthNum = date.getMonth();
+        const currentYear = date.getFullYear();
+
         console.log('Processing month:', {
           rawDate: date,
-          month: date.getMonth() + 1,
-          year: date.getFullYear()
+          month: currentMonthNum + 1,
+          year: currentYear
         });
 
         console.log('1. Fetching events for month:', currentMonth);
@@ -56,16 +60,10 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
           data: doc.data()
         })));
 
-        const currentDate = new Date(currentMonth);
-        const currentMonthNum = currentDate.getMonth();
-        const currentYear = currentDate.getFullYear();
-
-        console.log('3. Current month/year:', { currentMonthNum, currentYear });
-
         const events = querySnapshot.docs
           .map(doc => {
             const data = doc.data();
-            const eventDate = new Date(data.date);
+            const eventDate = parseISO(data.date);
             console.log('4. Processing event:', {
               date: data.date,
               eventDate,
@@ -84,7 +82,11 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
             return null;
           })
           .filter(event => event !== null)
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          .sort((a, b) => {
+            const dateA = parseISO(a.date);
+            const dateB = parseISO(b.date);
+            return dateA.getTime() - dateB.getTime();
+          });
 
         console.log('5. Filtered events:', events);
         setMonthEvents(events);
@@ -148,6 +150,12 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
             </View>
           )}
           style={styles.list}
+          contentContainerStyle={{ 
+            paddingBottom: 100,  // Add more padding for tab bar
+          }}
+          showsVerticalScrollIndicator={true}
+          scrollEnabled={true}
+          nestedScrollEnabled={true}  // Add this
         />
       ) : (
         <Text style={styles.noEventsText}>No plants to plant this month</Text>
@@ -159,7 +167,7 @@ export function PlantAgendaList({ selectedDate, currentMonth }: PlantAgendaListP
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2eee4',
+    backgroundColor: '#f5eef0',
     padding: 16,
   },
   list: {
@@ -167,37 +175,39 @@ const styles = StyleSheet.create({
   },
   eventItem: {
     flexDirection: 'row',
-    padding: 12,
+    padding: 6,
     marginBottom: 8,
-    backgroundColor: '#f2eee4',
-    borderRadius: 12,
+    backgroundColor: '#f5eef0',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#694449',
     alignItems: 'center',
   },
   selectedEvent: {
-    backgroundColor: '#faf0e6',
-    borderColor: '#d6844b',
+    backgroundColor: '#f4dbde',
+    borderColor: '#ddc6c9',
     borderWidth: 1,
   },
   plantImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
   },
   eventContent: {
     marginLeft: 12,
     flex: 1,
   },
   plantName: {
-    fontSize: 16,
+    fontSize: 20,
     fontFamily: 'PoppinsSemiBold',
-    color: '#2c2c2c',
-    marginBottom: 4,
+    color: '#694449',
+    marginBottom: 2,
   },
   dateText: {
     fontSize: 14,
-    fontFamily: 'PoppinsSemiBold',
-    color: '#d6844b',
-    marginBottom: 4
+    fontFamily: 'Poppins',
+    color: '#ed9aa4',
+    marginBottom: 2
   },
   noEventsText: {
     textAlign: 'center',
@@ -225,6 +235,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: 300,
   },
 }); 

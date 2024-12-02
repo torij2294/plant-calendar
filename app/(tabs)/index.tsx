@@ -12,7 +12,7 @@ export default function TabOneScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2eee4',
+    backgroundColor: '#f5eef0',
     paddingTop: 0,
   },
 });

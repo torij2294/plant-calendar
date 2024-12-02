@@ -101,98 +101,69 @@ Input: "${plantName}"`.trim();
       return {exists: false};
     }
 
-    // If plant exists, generate DALL-E prompt
+    // Update the DALL-E prompt generation
     const dallePrompt = `
-Generate a DALL-E prompt to create a high-quality, realistic illustration of a plant based on the following input. Replace "${plantName}" with the user's provided plant name, and describe the plant's typical appearance using accurate botanical details. The image should follow these criteria:
+A photorealistic botanical illustration of a healthy ${plantName} centered against a clean white background. The image highlights a defining feature of the plant, such as [specific defining feature, e.g., ripe tomatoes for a tomato plant, soft velvety leaves for sage, or bright green peppers for a jalapeño plant], depicted with high detail, vibrant natural colors, and scientific accuracy.
 
-- A clean, white background that keeps the plant as the main focus.
-- A visually appealing, natural illustration of a single ${plantName}, emphasizing its healthy and vibrant characteristics.
-- Include general descriptions of the plant’s physical features, such as:
-  - The shape, color, and texture of the leaves.
-  - Any visible stems, flowers, or other notable features, described in a way that captures the plant’s essence.
-- The plant should look aesthetically pleasing and easily recognizable, with natural proportions and balanced composition.
-- Avoid cartoonish or abstract styles, opting for a polished and realistic artistic style.
+The composition should:
+- Showcase the defining feature in sharp focus, with supporting elements like stems, leaves, or additional features providing context in the background.
+- Include enough of the plant to give a sense of its structure and overall characteristics.
+- Depict the plant in perfect health, ensuring textures, colors, and forms are natural and realistic.
+- Style it as a close-up, focusing on the plant's most recognizable and visually appealing traits.
 
-The prompt should ensure the generated image complies with content policies by being respectful, appropriate, and adhering to artistic and botanical standards.`.trim();
+Lighting: Soft, even illumination to enhance texture, color, and detail.
+Style: Natural, photorealistic botanical photography.`.trim();
 
-    const dalleResponse = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an expert at creating clear, detailed DALL-E image generation prompts.",
-        },
-        {
-          role: "user",
-          content: dallePrompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 500,
+    // Update the image generation parameters
+    const imageResponse = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: dallePrompt,
+      n: 1,
+      size: "1024x1024",
+      quality: "hd",
+      style: "natural",
     });
 
-    const imagePrompt = dalleResponse.choices[0].message?.content || "";
+    console.log("DALL-E response:", imageResponse);
 
-    // If we have a valid plant and image prompt, generate the image
-    if (profileData.exists && imagePrompt) {
-      try {
-        const imageResponse = await openai.images.generate({
-          model: "dall-e-3",
-          prompt: imagePrompt,
-          n: 1,
-          size: "1024x1024",
-          quality: "standard",
-          style: "natural",
-        });
-
-        console.log("DALL-E response:", imageResponse);
-
-        const dalleUrl = imageResponse.data[0]?.url;
-        if (dalleUrl) {
-          console.log("Generated DALL-E URL:", dalleUrl);
-          // Immediately download the image
-          const response = await fetch(dalleUrl);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch image: ${response.statusText}`);
-          }
-
-          const buffer = await response.buffer();
-
-          // Save to Firebase Storage
-          const bucket = admin.storage().bucket();
-          const filename = `plant-images/${Date.now()}-${plantName.toLowerCase().replace(/\s+/g, "-")}.png`;
-          const file = bucket.file(filename);
-
-          await file.save(buffer, {
-            metadata: {
-              contentType: "image/png",
-            },
-          });
-
-          // Make the file publicly accessible
-          await file.makePublic();
-
-          // Get the public URL
-          const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
-
-          return {
-            exists: true,
-            plantProfile: profileData.plantProfile,
-            imagePrompt,
-            imageUrl: publicUrl,
-          };
-        } else {
-          console.error("No URL in DALL-E response");
-        }
-      } catch (imageError) {
-        console.error("Error generating image:", imageError);
-        return {
-          exists: true,
-          plantProfile: profileData.plantProfile,
-          imagePrompt,
-        };
+    const dalleUrl = imageResponse.data[0]?.url;
+    if (dalleUrl) {
+      console.log("Generated DALL-E URL:", dalleUrl);
+      // Immediately download the image
+      const response = await fetch(dalleUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
       }
+
+      const buffer = await response.buffer();
+
+      // Save to Firebase Storage
+      const bucket = admin.storage().bucket();
+      const filename = `plant-images/${Date.now()}-${plantName
+        .toLowerCase()
+        .replace(/\s+/g, "-")}.png`;
+      const file = bucket.file(filename);
+
+      await file.save(buffer, {
+        metadata: {
+          contentType: "image/png",
+        },
+      });
+
+      // Make the file publicly accessible
+      await file.makePublic();
+
+      // Get the public URL
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+
+      return {
+        exists: true,
+        plantProfile: profileData.plantProfile,
+        imagePrompt: dallePrompt,
+        imageUrl: publicUrl,
+      };
+    } else {
+      console.error("No URL in DALL-E response");
     }
 
     return {
@@ -235,7 +206,8 @@ export const getPlantingDate = functions.https.onCall(async (data, context) => {
       messages: [
         {
           role: "system",
-          content: "You are a gardening expert. Respond only with a date in MM-DD format.",
+          content:
+            "You are a gardening expert. Respond only with a date in MM-DD format.",
         },
         {role: "user", content: prompt},
       ],

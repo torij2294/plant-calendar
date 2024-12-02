@@ -44,7 +44,7 @@ export default function PlantCalendarView() {
         const userPlantsRef = collection(db, 'userProfiles', user.uid, 'calendar');
         const q = query(userPlantsRef);
         const querySnapshot = await getDocs(q);
-        
+
         const fetchedEvents = querySnapshot.docs.map(doc => {
           const data = doc.data();
           return {
@@ -68,51 +68,63 @@ export default function PlantCalendarView() {
 
   const getMarkedDates = () => {
     const marked = {};
+    const today = new Date().toISOString().split('T')[0];
     
-    // Mark selected date
-    if (selectedDate) {
-      marked[selectedDate] = { 
-        selected: true, 
-        selectedColor: '#d6844b',
-        plants: [] // Initialize plants array
-      };
-    }
+    // Mark today's date with a circle
+    marked[today] = {
+      customStyles: {
+        container: {
+          borderColor: '#694449',
+          borderWidth: 1,
+          borderRadius: 18,
+        }
+      },
+      marked: true,
+      dotColor: '#694449'
+    };
 
-    // Add this console log to see what events we have
-    console.log('Events for marking:', events);
-
-    // Group events by date
+    // Add existing plant markers
     events.forEach(event => {
-      if (!event?.date) {
-        console.log('Event missing date:', event);
-        return;
-      }
+      if (!event?.date) return;
 
-      // Initialize if date doesn't exist in marked
-      if (!marked[event.date]) {
-        marked[event.date] = {
-          plants: [],
-          customStyles: {
-            container: {
-              backgroundColor: 'transparent',
-            },
+      marked[event.date] = {
+        plants: marked[event.date]?.plants || [],
+        customStyles: {
+          container: {
+            backgroundColor: 'transparent',
+            ...(event.date === today && {
+              borderColor: '#694449',
+              borderWidth: 1,
+              borderRadius: 18,
+            })
           }
-        };
-      }
+        }
+      };
 
-      // Make sure plants array exists
-      if (!marked[event.date].plants) {
-        marked[event.date].plants = [];
-      }
-
-      // Add plant if it exists
       if (event.plant) {
         marked[event.date].plants.push(event.plant);
       }
     });
 
-    // Add this console log to see final marked dates
-    console.log('Final marked dates:', marked);
+    // Mark selected date
+    if (selectedDate) {
+      marked[selectedDate] = {
+        ...marked[selectedDate],
+        selected: true,
+        selectedColor: '#d6844b',
+        plants: marked[selectedDate]?.plants || [],
+        customStyles: {
+          container: {
+            ...(marked[selectedDate]?.customStyles?.container || {}),
+            ...(selectedDate === today && {
+              borderColor: '#694449',
+              borderWidth: 1,
+              borderRadius: 18,
+            })
+          }
+        }
+      };
+    }
 
     return marked;
   };
@@ -154,41 +166,39 @@ export default function PlantCalendarView() {
         hideExtraDays={false}
         firstDay={1}
         theme={{
-          calendarBackground: '#f2eee4',
-          monthTextColor: '#5a6736',
-          textSectionTitleColor: '#5a6736',
-          selectedDayBackgroundColor: '#d6844b',
-          selectedDayTextColor: '#ffffff',
-          todayTextColor: '#d6844b',
-          dayTextColor: '#5a6736',
-          textDisabledColor: '#d5d5d5',
-          arrowColor: '#5a6736',
-          textDayFontFamily: typography.calendar.dayText.fontFamily,
-          textMonthFontFamily: typography.calendar.monthText.fontFamily,
+          calendarBackground: '#f5eef0',
+          monthTextColor: '#694449',
+          arrowColor: '#ab8d91',
           textDayHeaderFontFamily: typography.calendar.dayHeader.fontFamily,
-          textDayFontSize: typography.calendar.dayText.fontSize,
+          textMonthFontFamily: typography.calendar.monthText.fontFamily,
           textMonthFontSize: typography.calendar.monthText.fontSize,
           textDayHeaderFontSize: 13,
           dayNamesWidth: 32,
-          dayNamesShort: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
           'stylesheet.calendar.header': {
+            header: {
+              flexDirection: 'row',
+              justifyContent: 'flex-start',
+              paddingLeft: 4,
+              marginBottom: 0,
+              marginTop: 10,
+            },
             dayHeader: {
               width: 32,
               textAlign: 'center',
               fontSize: typography.calendar.dayHeader.fontSize,
               fontFamily: typography.calendar.dayHeader.fontFamily,
-              color: '#5a6736',
-              marginTop: 2,
+              color: '#694449', //DAY (Mon, Tues, etc.) TEXT COLOR FOR CALENDAR
+              marginTop: 0,
               marginBottom: 7,
             },
           },
         }}
-        dayComponent={({date, state, marking}) => {
+        dayComponent={({ date, state, marking }) => {
           const plants = marking?.plants || [];
           const isSelected = marking?.selected;
-          
+
           return (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[
                 styles.dayContainer,
                 isSelected && styles.selectedContainer
@@ -197,39 +207,18 @@ export default function PlantCalendarView() {
             >
               {plants.length > 0 ? (
                 <View style={styles.multiplePlantsContainer}>
-                  {plants.length > 1 ? (
-                    <>
-                      <Image 
-                        source={{ uri: plants[0].imageUrl }}
-                        style={[
-                          styles.plantImageBack,
-                          isSelected && styles.selectedPlantImage
-                        ]}
-                        defaultSource={require('@/assets/images/plant-calendar-logo.png')}
-                      />
-                      <Image 
-                        source={{ uri: plants[1].imageUrl }}
-                        style={[
-                          styles.plantImageFront,
-                          isSelected && styles.selectedPlantImage
-                        ]}
-                        defaultSource={require('@/assets/images/plant-calendar-logo.png')}
-                      />
-                      {plants.length > 2 && (
-                        <View style={styles.extraPlantsIndicator}>
-                          <Text style={styles.extraPlantsText}>+{plants.length - 2}</Text>
-                        </View>
-                      )}
-                    </>
-                  ) : (
-                    <Image 
-                      source={{ uri: plants[0].imageUrl }}
-                      style={[
-                        styles.plantImage,
-                        isSelected && styles.selectedPlantImage
-                      ]}
-                      defaultSource={require('@/assets/images/plant-calendar-logo.png')}
-                    />
+                  <Image
+                    source={{ uri: plants[0].imageUrl }}
+                    style={[
+                      styles.plantImage,
+                      isSelected && styles.selectedPlantImage
+                    ]}
+                    defaultSource={require('@/assets/images/plant-calendar-logo.png')}
+                  />
+                  {plants.length > 1 && (
+                    <View style={styles.extraPlantsIndicator}>
+                      <Text style={styles.extraPlantsText}>+{plants.length - 1}</Text>
+                    </View>
                   )}
                 </View>
               ) : (
@@ -237,7 +226,6 @@ export default function PlantCalendarView() {
                   styles.dayText,
                   state === 'disabled' && styles.disabledText,
                   isSelected && styles.selectedText,
-                  { color: '#5a6736' }
                 ]}>
                   {date.day}
                 </Text>
@@ -251,9 +239,9 @@ export default function PlantCalendarView() {
         styles.agendaContainer,
         { marginTop: -20 }
       ]}>
-        <PlantAgendaList 
+        <PlantAgendaList
           key={currentMonth}
-          selectedDate={selectedDate} 
+          selectedDate={selectedDate}
           currentMonth={currentMonth}
         />
       </View>
@@ -264,18 +252,17 @@ export default function PlantCalendarView() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2eee4',
+    backgroundColor: '#f5eef0',
   },
   calendar: {
     marginBottom: -20,
   },
   agendaContainer: {
     flex: 1,
-    minHeight: 300,
   },
   dayContainer: {
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
     margin: 4,
@@ -283,51 +270,44 @@ const styles = StyleSheet.create({
   plantImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 16,
+    borderRadius: 18,
   },
   dayText: {
-    fontSize: 16,
+    fontSize: 20,
+    color: '#694449', //DAY #s TEXT COLOR FOR CALENDAR
     fontFamily: typography.calendar.dayText.fontFamily,
   },
   disabledText: {
-    color: '#d5d5d5',
+    color: '#f4dbde',
   },
   selectedText: {
     color: '#ffffff',
   },
   selectedContainer: {
-    backgroundColor: '#d6844b',
-    borderRadius: 16,
+    backgroundColor: '#ddc6c9',
+    borderRadius: 18,
   },
   selectedPlantImage: {
-    borderWidth: 2,
-    borderColor: '#d6844b',
+    borderWidth: 1,
+    borderColor: '#ddc6c9',
   },
   multiplePlantsContainer: {
     width: '100%',
     height: '100%',
     position: 'relative',
   },
-  plantImageBack: {
+  extraPlantsIndicator: {
     position: 'absolute',
-    width: '90%',
-    height: '90%',
-    borderRadius: 16,
-    top: 0,
-    left: 0,
-    opacity: 0.7,
-  },
-  plantImageFront: {
-    position: 'absolute',
-    width: '90%',
-    height: '90%',
-    borderRadius: 16,
-    bottom: 0,
-    right: 0,
+    bottom: -4,
+    right: -4,
+    backgroundColor: '#694449',
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
   },
   extraPlantsText: {
     color: 'white',
     fontSize: 10,
-    fontWeight: 'bold',
+    fontFamily: 'PoppinsMedium',
   },
 }); 
