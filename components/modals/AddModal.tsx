@@ -185,7 +185,7 @@ export function AddModal({ isVisible, onClose }: AddModalProps) {
       />
       <Text style={styles.statusText}>
         {status === 'checking' && 'Verifying plant name...'}
-        {status === 'generating' && 'Generating plant profile...'}
+        {status === 'generating' && 'Generating plant profile. This may take a moment...'}
         {status === 'saving' && 'Saving plant...'}
       </Text>
     </View>

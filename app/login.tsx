@@ -123,20 +123,21 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 120,
+    height: 120,
     marginBottom: 20,
+    borderRadius: 100,
   },
   welcomeText: {
     fontSize: 24,
     fontFamily: 'PoppinsSemiBold',
-    color: '#333',
+    color: '#694449',
     marginBottom: 8,
   },
   subtitleText: {
     fontSize: 16,
     fontFamily: 'Poppins',
-    color: '#666',
+    color: '#694449',
   },
   formSection: {
     marginBottom: 30,
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     fontSize: 16,
@@ -156,12 +157,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   forgotPasswordText: {
-    color: '#d6844b',
+    color: '#694449',
     fontFamily: 'PoppinsMedium',
     fontSize: 14,
   },
   loginButton: {
-    backgroundColor: '#d6844b',
+    backgroundColor: '#694449',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -214,7 +215,7 @@ const styles = StyleSheet.create({
   },
   signupLink: {
     fontFamily: 'PoppinsSemiBold',
-    color: '#d6844b',
+    color: '#694449',
     fontSize: 14,
   },
 }); 
