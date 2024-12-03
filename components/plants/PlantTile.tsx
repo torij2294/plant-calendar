@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 import { Plant } from '@/types/plants';
 import { handlePlantSelection } from '@/services/userPlantsService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +10,7 @@ import { useRouter } from 'expo-router';
 import { parseISO, format } from 'date-fns';
 
 const defaultPlantImage = require('@/assets/images/plant-calendar-logo.png');
+const defaultBlurhash = 'L5H2EC=PM+yV0g-mq.wG9c010J}I';
 
 interface PlantTileProps {
   plant: Plant;
@@ -49,11 +51,13 @@ export function PlantTile({ plant, onPress, plantingDate }: PlantTileProps) {
     >
       <View style={styles.imageContainer}>
         <Image 
-          source={imageSource}
           style={styles.image}
-          onError={handleImageError}
-          onLoad={() => console.log('Image loaded successfully:', plant.imageUrl)}
-          loadingIndicatorSource={defaultPlantImage}
+          source={plant.imageUrl ? { uri: plant.imageUrl.trim() } : defaultPlantImage}
+          placeholder={defaultBlurhash}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
+          recyclingKey={plant.id}
         />
       </View>
       
@@ -110,7 +114,7 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    backgroundColor: '#f5f5f5',
   },
   contentContainer: {
     flex: 1,
