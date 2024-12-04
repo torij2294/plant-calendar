@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
-  Image,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
@@ -20,27 +19,86 @@ import { db } from '@/config/firebase';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { getCurrentLocation, validateLocation } from '@/services/location';
 import { SignOutButton } from '@/components/ui/SignOutButton';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Image } from 'expo-image';
 
 const profileImages = [
-  { id: 1, source: require('@/assets/images/profile-images/profile-1.png') },
-  { id: 2, source: require('@/assets/images/profile-images/profile-2.png') },
-  { id: 3, source: require('@/assets/images/profile-images/profile-3.png') },
-  { id: 4, source: require('@/assets/images/profile-images/profile-4.png') },
-  { id: 5, source: require('@/assets/images/profile-images/profile-5.png') },
-  { id: 6, source: require('@/assets/images/profile-images/profile-6.png') },
-  { id: 7, source: require('@/assets/images/profile-images/profile-7.png') },
-  { id: 8, source: require('@/assets/images/profile-images/profile-8.png') },
-  { id: 9, source: require('@/assets/images/profile-images/profile-9.png') },
-  { id: 11, source: require('@/assets/images/profile-images/profile-11.png') },
-  { id: 12, source: require('@/assets/images/profile-images/profile-12.png') },
-  { id: 13, source: require('@/assets/images/profile-images/profile-13.png') },
+  { 
+    id: 1, 
+    source: require('@/assets/images/profile-images/profile-1.png'),
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I'
+  },
+  { 
+    id: 2, 
+    source: require('@/assets/images/profile-images/profile-2.png'),
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I'
+  },
+  { 
+    id: 3, 
+    source: require('@/assets/images/profile-images/profile-3.png'),
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I' 
+  },
+  { 
+    id: 4, 
+    source: require('@/assets/images/profile-images/profile-4.png'), 
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I'
+  },
+  { 
+    id: 5, 
+    source: require('@/assets/images/profile-images/profile-5.png'),
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I'
+   },
+  { 
+    id: 6, 
+    source: require('@/assets/images/profile-images/profile-6.png'),
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I'
+   },
+  { 
+    id: 7, 
+    source: require('@/assets/images/profile-images/profile-7.png'),
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I'
+   },
+  { 
+    id: 8, 
+    source: require('@/assets/images/profile-images/profile-8.png'),
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I'
+   },
+  { 
+    id: 9, 
+    source: require('@/assets/images/profile-images/profile-9.png'),
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I' 
+  },
+  { 
+    id: 11, 
+    source: require('@/assets/images/profile-images/profile-11.png'),
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I'
+   },
+  { 
+    id: 12, 
+    source: require('@/assets/images/profile-images/profile-12.png'),
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I'
+   },
+  { 
+    id: 13, 
+    source: require('@/assets/images/profile-images/profile-13.png'),
+    blurhash: 'L5H2EC=PM+yV0g-mq.wG9c010J}I'
+   },
 ];
 
 export default function ProfileScreen() {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
-  const [userData, setUserData] = useState({
+  
+  // Replace useEffect with useQuery
+  const { 
+    data: userData, 
+    isLoading, 
+    error 
+  } = useUserProfile(user?.uid);
+  
+  const [editedData, setEditedData] = useState(userData || {
     firstName: '',
     lastName: '',
     email: user?.email || '',
@@ -52,34 +110,37 @@ export default function ProfileScreen() {
       country: ''
     }
   });
-  const [editedData, setEditedData] = useState({...userData});
 
-  // Fetch user data when component mounts
-  React.useEffect(() => {
-    const fetchUserData = async () => {
-      if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const data = userDoc.data();
-        if (data) {
-          const userInfo = {
-            firstName: data.firstName || '',
-            lastName: data.lastName || '',
-            email: user.email || '',
-            avatar: data.avatar || null,
-            location: {
-              latitude: data.location?.latitude || null,
-              longitude: data.location?.longitude || null,
-              city: data.location?.city || '',
-              country: data.location?.country || '',
-            }
-          };
-          setUserData(userInfo);
-          setEditedData(userInfo);
-        }
-      }
-    };
-    fetchUserData();
-  }, [user]);
+  // Update editedData when userData changes
+  useEffect(() => {
+    if (userData) {
+      setEditedData(userData);
+    }
+  }, [userData]);
+
+  // Setup mutation for updating profile
+  const queryClient = useQueryClient();
+  const updateProfileMutation = useMutation({
+    mutationFn: async (newData: typeof editedData) => {
+      if (!user?.uid) throw new Error('No user ID');
+      await updateDoc(doc(db, 'users', user.uid), newData);
+      return newData;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['userProfile', user?.uid] });
+      setIsEditing(false);
+      Alert.alert('Success', 'Profile updated successfully');
+    },
+    onError: (error) => {
+      Alert.alert('Error', 'Failed to update profile');
+      console.error(error);
+    }
+  });
+
+  const handleSave = () => {
+    updateProfileMutation.mutate(editedData);
+  };
 
   const handleUpdateLocation = async () => {
     setIsUpdatingLocation(true);
@@ -98,26 +159,6 @@ export default function ProfileScreen() {
       console.error(error);
     } finally {
       setIsUpdatingLocation(false);
-    }
-  };
-
-  const handleSave = async () => {
-    try {
-      if (!user) return;
-
-      await updateDoc(doc(db, 'users', user.uid), {
-        firstName: editedData.firstName,
-        lastName: editedData.lastName,
-        avatar: editedData.avatar,
-        location: editedData.location
-      });
-
-      setUserData(editedData);
-      setIsEditing(false);
-      Alert.alert('Success', 'Profile updated successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
-      console.error(error);
     }
   };
 
@@ -149,6 +190,30 @@ export default function ProfileScreen() {
     </View>
   );
 
+  // Add loading state
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color="#694449" />
+      </View>
+    );
+  }
+
+  // Add error state
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.errorText}>Error loading profile</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => queryClient.invalidateQueries({ queryKey: ['userProfile', user?.uid] })}
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
@@ -172,13 +237,20 @@ export default function ProfileScreen() {
         >
           <View style={styles.avatarSection}>
             <Image 
+              style={styles.avatar}
               source={
                 (isEditing ? editedData.avatar : userData.avatar) 
                   ? profileImages.find(img => img.id === (isEditing ? editedData.avatar : userData.avatar))?.source
                   : require('@/assets/images/profile-images/profile-1.png')
               }
-              style={styles.avatar}
+              placeholder={
+                profileImages.find(img => img.id === (isEditing ? editedData.avatar : userData.avatar))?.blurhash
+              }
+              contentFit="cover"
+              transition={300}
+              cachePolicy="memory-disk"
             />
+            
             {isEditing && (
               <ScrollView 
                 horizontal 
@@ -195,7 +267,14 @@ export default function ProfileScreen() {
                       editedData.avatar === image.id && styles.selectedAvatarOption
                     ]}
                   >
-                    <Image source={image.source} style={styles.avatarOptionImage} />
+                    <Image 
+                      source={image.source}
+                      style={styles.avatarOptionImage}
+                      placeholder={image.blurhash}
+                      contentFit="cover"
+                      transition={300}
+                      cachePolicy="memory-disk"
+                    />
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -335,6 +414,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 120,
     height: 120,
+    borderRadius: 60,
   },
   avatarPicker: {
     marginTop: 20,
@@ -446,5 +526,25 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: {
     opacity: 0.7,
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontFamily: 'PoppinsSemiBold',
+    fontSize: 16,
+    color: '#694449',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#694449',
+    padding: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontFamily: 'PoppinsSemiBold',
+    fontSize: 14,
   },
 }); 

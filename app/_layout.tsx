@@ -13,6 +13,7 @@ import { useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export {
   ErrorBoundary,
@@ -23,6 +24,16 @@ export const unstable_settings = {
 };
 
 SplashScreen.preventAutoHideAsync();
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // Data is considered fresh for 5 minutes
+      cacheTime: 1000 * 60 * 30, // Cache is kept for 30 minutes
+    },
+  },
+});
 
 export default function RootLayout() {
   console.log('RootLayout rendering');
@@ -54,9 +65,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={DefaultTheme}>
-      <AuthProvider>
-        <RootLayoutNav />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <RootLayoutNav />
+        </AuthProvider>
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }
