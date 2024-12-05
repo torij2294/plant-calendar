@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { handleGoogleAuth } = useGoogleAuth();
+  const { handleGoogleAuth, isLoading } = useGoogleAuth();
 
   const handleLogin = async () => {
     try {
@@ -20,10 +20,32 @@ export default function LoginScreen() {
 
   const handleGoogleLogin = async () => {
     try {
-      await handleGoogleAuth();
-      router.replace('/(tabs)');
+      console.log('Google login button pressed');
+      console.log('Auth loading state:', isLoading);
+      
+      if (!handleGoogleAuth) {
+        console.error('handleGoogleAuth is not defined');
+        return;
+      }
+
+      const result = await handleGoogleAuth();
+      console.log('Raw Google auth result:', result);
+      
+      if (!result) {
+        console.log('No result from Google auth');
+        return;
+      }
+
+      if (result.type === 'success') {
+        console.log('Success! Authentication data:', result.authentication);
+        // Handle successful login
+        router.replace('/welcome');
+      } else {
+        console.log('Auth was not successful:', result.type);
+      }
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      console.error('Google login error:', error);
+      Alert.alert('Error', error.message || 'Failed to sign in with Google');
     }
   };
 
@@ -80,7 +102,6 @@ export default function LoginScreen() {
               <Text style={styles.orText}>Or continue with</Text>
               <View style={styles.line} />
             </View>
-
             <TouchableOpacity 
               style={styles.googleButton} 
               onPress={handleGoogleLogin}

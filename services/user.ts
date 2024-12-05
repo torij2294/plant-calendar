@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 
 interface UserLocation {
@@ -50,24 +50,35 @@ export async function createUserProfile(
   await setDoc(userRef, newUser);
 }
 
-export async function updateUserWelcomeInfo(
+export const updateUserWelcomeInfo = async (
   uid: string,
-  avatarId: number,
-  location: UserLocation,
-  firstName?: string,
-  lastName?: string
-): Promise<void> {
-  const userRef = doc(db, 'users', uid);
-  
-  await updateDoc(userRef, {
-    avatar: avatarId,
-    location,
-    firstName,
-    lastName,
-    setupComplete: true,
-    updatedAt: new Date(),
-  });
-}
+  avatar: number,
+  location: Location
+) => {
+  try {
+    console.log('Updating user welcome info:', { uid, avatar, location });
+    
+    const userRef = doc(db, 'users', uid);
+    
+    // Only update the specific fields we want to change
+    const updateData = {
+      avatar: avatar,
+      location: location,
+      setupComplete: true,
+      updatedAt: serverTimestamp()
+    };
+
+    console.log('Update data:', updateData);
+    
+    await updateDoc(userRef, updateData);
+    
+    console.log('Update successful');
+    return true;
+  } catch (error) {
+    console.error('Error updating user welcome info:', error);
+    throw error;
+  }
+};
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const userRef = doc(db, 'users', uid);

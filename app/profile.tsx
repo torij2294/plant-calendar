@@ -91,7 +91,6 @@ export default function ProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   
-  // Replace useEffect with useQuery
   const { 
     data: userData, 
     isLoading, 
@@ -222,7 +221,7 @@ export default function ProfileScreen() {
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <FontAwesome name="arrow-left" size={24} color="#5a6736" />
+            <FontAwesome name="arrow-left" size={24} color="#694449" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profile</Text>
           <TouchableOpacity onPress={() => setIsEditing(!isEditing)} style={styles.editButton}>

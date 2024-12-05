@@ -14,6 +14,7 @@ import {
 import { signUp } from '@/services/auth';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function SignupScreen() {
   const [firstName, setFirstName] = useState('');
@@ -37,14 +38,25 @@ export default function SignupScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      {/* Custom Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <FontAwesome name="arrow-left" size={24} color="#694449" />
+        </TouchableOpacity>
+        <View style={styles.headerRight} />
+      </View>
+
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView 
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.contentContainer}>
             {/* Logo/Header Section */}
@@ -130,18 +142,40 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5eef0',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    height: 56,
+    paddingHorizontal: 16,
+    backgroundColor: '#f5eef0',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#694449',
+  },
+  backButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  headerRight: {
+    width: 40,
   },
   keyboardView: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
-    flexGrow: 1,
+    paddingVertical: 24,
   },
   contentContainer: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: Platform.OS === 'ios' ? 50 : 20,
   },
   headerSection: {
     alignItems: 'center',
@@ -151,17 +185,18 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     marginBottom: 20,
+    borderRadius: 50,
   },
   welcomeText: {
     fontSize: 24,
     fontFamily: 'PoppinsSemiBold',
-    color: '#333',
+    color: '#694449',
     marginBottom: 8,
   },
   subtitleText: {
     fontSize: 16,
     fontFamily: 'Poppins',
-    color: '#666',
+    color: '#694449',
   },
   formSection: {
     marginBottom: 24,
@@ -177,7 +212,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#ddc6c9',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -186,7 +221,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F8F8',
   },
   signupButton: {
-    backgroundColor: '#d6844b',
+    backgroundColor: '#694449',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -210,7 +245,25 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontFamily: 'PoppinsSemiBold',
-    color: '#d6844b',
+    color: '#694449',
     fontSize: 14,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f5eef0',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontFamily: 'PoppinsSemiBold',
+    color: '#694449',
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerRight: {
+    width: 40, // Same width as back button for alignment
   },
 }); 

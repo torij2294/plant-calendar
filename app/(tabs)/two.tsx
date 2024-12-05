@@ -66,8 +66,8 @@ export default function TabTwoScreen() {
       archivedPlants.sort(sortByDate);
 
       setSections([
-        { title: 'Plants to Plant', data: currentPlants },
-        { title: 'Archive', data: archivedPlants }
+        { title: 'To Plant', data: currentPlants },
+        { title: 'Planted', data: archivedPlants }
       ]);
     } catch (error) {
       console.error('Error fetching plants:', error);

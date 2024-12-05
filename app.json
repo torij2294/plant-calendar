@@ -22,7 +22,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.torij2294.PlantingApp"
+      "package": "com.torij2294.PlantingApp",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -33,6 +37,7 @@
       "expo-router",
       "expo-font",
       "expo-build-properties",
+      "expo-dev-client",
       [
         "expo-location",
         {
@@ -44,6 +49,14 @@
       "typedRoutes": true,
       "tsconfigPaths": true
     },
-    "backgroundColor": "#f2eee4"
+    "backgroundColor": "#f2eee4",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "480c5cb2-f1ef-4830-a582-6e12671c8329"
+      }
+    }
   }
 }

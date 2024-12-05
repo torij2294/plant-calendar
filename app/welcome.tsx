@@ -74,6 +74,12 @@ export default function WelcomeScreen() {
 
     try {
       if (user) {
+        console.log('Attempting to update welcome info with:', {
+          uid: user.uid,
+          avatar: selectedAvatar,
+          location
+        });
+        
         await updateUserWelcomeInfo(
           user.uid, 
           selectedAvatar,
@@ -82,7 +88,8 @@ export default function WelcomeScreen() {
         router.replace('/(tabs)');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to save your preferences');
+      console.error('Error in handleComplete:', error);
+      Alert.alert('Error', 'Failed to save your preferences: ' + error.message);
     }
   };
 
@@ -90,7 +97,6 @@ export default function WelcomeScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.stepContainer}>
         <Text style={styles.title}>Choose Your Avatar</Text>
-        <Text style={styles.subtitle}>Pick an avatar that represents you</Text>
         
         <ScrollView 
           contentContainerStyle={styles.avatarGrid}
@@ -145,12 +151,6 @@ export default function WelcomeScreen() {
 
         <View style={styles.buttonRow}>
           <TouchableOpacity 
-            style={[styles.button, styles.backButton]}
-            onPress={() => setStep(1)}
-          >
-            <Text style={[styles.buttonText, styles.backButtonText]}>Back</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
             style={[styles.button, styles.completeButton]}
             onPress={handleComplete}
           >
@@ -165,7 +165,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2eee4',
+    backgroundColor: '#f5eef0',
   },
   stepContainer: {
     flex: 1,
@@ -174,16 +174,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontFamily: 'PoppinsSemiBold',
-    color: '#333',
+    color: '#694449',
     textAlign: 'center',
     marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: 'Poppins',
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 24,
   },
   avatarGrid: {
     flexDirection: 'row',
@@ -202,8 +195,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   selectedAvatar: {
-    borderColor: '#d6844b',
-    backgroundColor: '#fff5ec',
+    borderColor: '#ddc6c9',
+    backgroundColor: '#f2eee4',
   },
   avatar: {
     width: '100%',
@@ -229,13 +222,13 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   button: {
-    flex: 0.48,
+    flex: 1,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
   },
   nextButton: {
-    backgroundColor: '#d6844b',
+    backgroundColor: '#ddc6c9',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -244,10 +237,10 @@ const styles = StyleSheet.create({
   backButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#d6844b',
+    borderColor: '#694449',
   },
   completeButton: {
-    backgroundColor: '#d6844b',
+    backgroundColor: '#694449',
   },
   buttonText: {
     color: 'white',
@@ -255,7 +248,7 @@ const styles = StyleSheet.create({
     fontFamily: 'PoppinsSemiBold',
   },
   backButtonText: {
-    color: '#d6844b',
+    color: '#694449',
   },
   locationButton: {
     backgroundColor: '#f0f0f0',
@@ -265,7 +258,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   locationButtonText: {
-    color: '#5a6736',
+    color: '#694449',
     fontFamily: 'PoppinsSemiBold',
   },
   inputError: {
@@ -284,18 +277,18 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   locationText: {
-    color: '#5a6736',
+    color: '#694449',
     fontFamily: 'PoppinsSemiBold',
   },
   updateLocationButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#ddc6c9',
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
     alignItems: 'center',
   },
   updateLocationText: {
-    color: '#5a6736',
+    color: '#694449',
     fontFamily: 'PoppinsSemiBold',
   },
 }); 
